@@ -75,6 +75,16 @@ export const StatsBar: React.FC<StatsBarProps> = ({
             {stats.primaryRelease || config.activeYoctoRelease || 'Custom'}
           </span>
         </div>
+
+        {/* OEROOT Debug Indicator */}
+        {config.oeRoot && (
+          <div className="hidden md:flex items-center gap-1.5" title={`Resolved OEROOT: ${config.oeRoot}`}>
+            <span className="text-gray-500">OEROOT:</span>
+            <span id="stat-oeroot" className="text-blue-400 font-mono font-semibold truncate max-w-[220px]">
+              {config.oeRoot}
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Live Graph Search / Filter Input */}

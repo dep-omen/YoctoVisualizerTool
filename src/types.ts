@@ -94,6 +94,7 @@ export interface YoctoBuildConfig {
   folderName: string;
   bblayersPath: string;
   localConfPath: string;
+  oeRoot?: string;
   machine?: string;
   distro?: string;
   imageInstall?: string[];

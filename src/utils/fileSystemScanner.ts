@@ -2,9 +2,11 @@ import { YoctoBbappend, YoctoBuildConfig, YoctoLayer, YoctoRecipe } from '../typ
 import {
   determineLayerCategory,
   parseBbappendFilename,
+  parseBblayersConf,
   parseLayerConf,
   parseLocalConf,
-  parseRecipeFilename
+  parseRecipeFilename,
+  resolveOeRoot
 } from './yoctoParser';
 
 // File System Access API types
@@ -106,22 +108,73 @@ async function searchFileRecursively(
 }
 
 /**
+ * Search recursively for all files matching a name (e.g. all layer.conf for fallback mode)
+ */
+async function searchAllFilesRecursively(
+  dirHandle: FileSystemDirectoryHandle,
+  targetFileName: string,
+  maxDepth = 4,
+  currentPath = ''
+): Promise<Array<{ handle: FileSystemFileHandle; path: string; parentDir: FileSystemDirectoryHandle }>> {
+  if (maxDepth < 0) return [];
+  const results: Array<{ handle: FileSystemFileHandle; path: string; parentDir: FileSystemDirectoryHandle }> = [];
+
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    for await (const [name, handle] of (dirHandle as any).entries()) {
+      if (handle.kind === 'file' && name === targetFileName) {
+        results.push({
+          handle: handle as FileSystemFileHandle,
+          path: currentPath ? `${currentPath}/${name}` : name,
+          parentDir: dirHandle
+        });
+      } else if (handle.kind === 'directory') {
+        if (['tmp', 'downloads', 'sstate-cache', 'cache', '.git', 'node_modules'].includes(name)) {
+          continue;
+        }
+        const subPath = currentPath ? `${currentPath}/${name}` : name;
+        const subResults = await searchAllFilesRecursively(
+          handle as FileSystemDirectoryHandle,
+          targetFileName,
+          maxDepth - 1,
+          subPath
+        );
+        results.push(...subResults);
+      }
+    }
+  } catch (err) {
+    console.warn('Error searching files:', err);
+  }
+
+  return results;
+}
+
+/**
  * Locate a directory handle corresponding to a layer path
  */
 async function resolveLayerDirectory(
   rootHandle: FileSystemDirectoryHandle,
   rawPath: string,
+  oeRoot: string,
   allDirMap: Map<string, FileSystemDirectoryHandle>
 ): Promise<{ handle: FileSystemDirectoryHandle; relativePath: string } | null> {
-  // Normalize rawPath: remove ${TOPDIR}, replace /home/... or relative ../
-  let clean = rawPath.replace(/\$\{TOPDIR\}/g, '').trim();
-  clean = clean.replace(/\\/g, '/');
+  let clean = rawPath.replace(/\\/g, '/').trim();
 
-  // If path contains segments, take the last segment or relative path
+  // If path starts with resolved OEROOT, extract relative path
+  if (oeRoot && clean.startsWith(oeRoot)) {
+    const relFromOe = clean.slice(oeRoot.length).replace(/^\/+/, '');
+    if (allDirMap.has(relFromOe)) {
+      return {
+        handle: allDirMap.get(relFromOe)!,
+        relativePath: relFromOe
+      };
+    }
+  }
+
   const segments = clean.split('/').filter(Boolean);
   const folderName = segments[segments.length - 1];
 
-  // 1. Check if folderName is in our pre-indexed directories map
+  // 1. Check direct folderName
   if (folderName && allDirMap.has(folderName)) {
     return {
       handle: allDirMap.get(folderName)!,
@@ -129,13 +182,23 @@ async function resolveLayerDirectory(
     };
   }
 
-  // 2. Try to match suffix (e.g. meta-openembedded/meta-oe)
+  // 2. Try match multi-segment suffixes (e.g. meta-openembedded/meta-oe or layers/meta-st/meta-st-stm32mp)
   if (segments.length >= 2) {
     const doubleSuffix = `${segments[segments.length - 2]}/${segments[segments.length - 1]}`;
+    if (allDirMap.has(doubleSuffix)) {
+      return { handle: allDirMap.get(doubleSuffix)!, relativePath: doubleSuffix };
+    }
     for (const [key, handle] of allDirMap.entries()) {
-      if (key.endsWith(doubleSuffix) || key === folderName) {
+      if (key.endsWith(doubleSuffix)) {
         return { handle, relativePath: key };
       }
+    }
+  }
+
+  if (segments.length >= 3) {
+    const tripleSuffix = `${segments[segments.length - 3]}/${segments[segments.length - 2]}/${segments[segments.length - 1]}`;
+    if (allDirMap.has(tripleSuffix)) {
+      return { handle: allDirMap.get(tripleSuffix)!, relativePath: tripleSuffix };
     }
   }
 
@@ -143,7 +206,6 @@ async function resolveLayerDirectory(
   let currentDir = rootHandle;
   let success = true;
   let resolved = '';
-  // find starting index if absolute path
   let startIdx = 0;
   const rootName = rootHandle.name;
   const rootIndex = segments.indexOf(rootName);
@@ -271,8 +333,28 @@ export async function scanYoctoDirectory(
     message: 'Searching for build/conf/bblayers.conf and local.conf...'
   });
 
+  // Pre-index top-level, second-level, and third-level directories in root directory
+  const allDirMap = new Map<string, FileSystemDirectoryHandle>();
+  async function indexDirs(dirHandle: FileSystemDirectoryHandle, prefix = '', depth = 0) {
+    if (depth > 4) return;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      for await (const [name, handle] of (dirHandle as any).entries()) {
+        if (handle.kind === 'directory') {
+          if (['tmp', 'downloads', 'sstate-cache', '.git', 'node_modules'].includes(name)) continue;
+          const full = prefix ? `${prefix}/${name}` : name;
+          allDirMap.set(name, handle as FileSystemDirectoryHandle);
+          allDirMap.set(full, handle as FileSystemDirectoryHandle);
+          await indexDirs(handle as FileSystemDirectoryHandle, full, depth + 1);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+  await indexDirs(rootDirHandle);
+
   // 1. Locate bblayers.conf
-  // Try standard locations first
   let bblayersResult = await findFileByPath(rootDirHandle, ['build', 'conf', 'bblayers.conf']);
   if (!bblayersResult) {
     bblayersResult = await findFileByPath(rootDirHandle, ['conf', 'bblayers.conf']);
@@ -285,47 +367,15 @@ export async function scanYoctoDirectory(
     }
   }
 
-  if (!bblayersResult) {
-    throw new Error(
-      "Couldn't find build/conf/bblayers.conf — make sure you selected the root of your Yocto project (containing the 'build' or 'conf' directory)."
-    );
+  let oeRoot = resolveOeRoot(bblayersResult ? bblayersResult.resolvedPath : rootDirHandle.name);
+  let rawLayerPaths: string[] = [];
+
+  if (bblayersResult) {
+    const bblayersContent = await readFileText(bblayersResult.handle);
+    const parsedBblayers = parseBblayersConf(bblayersContent, bblayersResult.resolvedPath);
+    oeRoot = parsedBblayers.oeRoot;
+    rawLayerPaths = parsedBblayers.layerPaths;
   }
-
-  const bblayersContent = await readFileText(bblayersResult.handle);
-  const bblayersLines = bblayersContent.split(/\r?\n/);
-  
-  // Extract layer paths from bblayers.conf
-  // BitBake BBLAYERS:
-  // BBLAYERS ?= " \
-  //   /home/.../poky/meta \
-  //   /home/.../poky/meta-poky \
-  //   ..."
-  const rawLayerPaths: string[] = [];
-  let inBblayers = false;
-  let bblayersBuffer = '';
-
-  for (const line of bblayersLines) {
-    const trimmed = line.trim();
-    if (/^BBLAYERS\b/.test(trimmed)) {
-      inBblayers = true;
-      bblayersBuffer += ' ' + trimmed.replace(/^BBLAYERS[^\w]*[=]/, '');
-    } else if (inBblayers) {
-      bblayersBuffer += ' ' + trimmed;
-    }
-
-    if (inBblayers && trimmed.endsWith('"') && !trimmed.endsWith('\\"')) {
-      inBblayers = false;
-    }
-  }
-
-  // Extract quoted paths or tokens
-  const cleanTokens = bblayersBuffer
-    .replace(/["'\\]/g, ' ')
-    .split(/\s+/)
-    .map(t => t.trim())
-    .filter(t => t.length > 0 && !t.startsWith('#'));
-
-  rawLayerPaths.push(...cleanTokens);
 
   // 2. Locate local.conf
   let localConfResult = await findFileByPath(rootDirHandle, ['build', 'conf', 'local.conf']);
@@ -347,32 +397,11 @@ export async function scanYoctoDirectory(
 
   onProgress?.({
     phase: 'parsing_layers',
-    message: `Discovered ${rawLayerPaths.length} layers in BBLAYERS. Indexing directories...`,
+    message: `Discovered ${rawLayerPaths.length} layer candidate(s). Verifying filesystem handles...`,
     total: rawLayerPaths.length
   });
 
-  // Pre-index top-level and second-level directories in root directory to quickly match layer paths
-  const allDirMap = new Map<string, FileSystemDirectoryHandle>();
-  async function indexDirs(dirHandle: FileSystemDirectoryHandle, prefix = '', depth = 0) {
-    if (depth > 3) return;
-    try {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      for await (const [name, handle] of (dirHandle as any).entries()) {
-        if (handle.kind === 'directory') {
-          if (['tmp', 'downloads', 'sstate-cache', '.git'].includes(name)) continue;
-          const full = prefix ? `${prefix}/${name}` : name;
-          allDirMap.set(name, handle as FileSystemDirectoryHandle);
-          allDirMap.set(full, handle as FileSystemDirectoryHandle);
-          await indexDirs(handle as FileSystemDirectoryHandle, full, depth + 1);
-        }
-      }
-    } catch {
-      // ignore
-    }
-  }
-  await indexDirs(rootDirHandle);
-
-  // 3. Process each layer
+  // 3. Process each layer candidate
   const parsedLayers: YoctoLayer[] = [];
   const collectionToLayerMap = new Map<string, YoctoLayer>();
   let processedCount = 0;
@@ -389,10 +418,10 @@ export async function scanYoctoDirectory(
       total: rawLayerPaths.length
     });
 
-    const dirRes = await resolveLayerDirectory(rootDirHandle, rawPath, allDirMap);
+    const dirRes = await resolveLayerDirectory(rootDirHandle, rawPath, oeRoot, allDirMap);
 
     if (!dirRes) {
-      // Layer not found on disk
+      // Layer candidate not found on disk -> Ghost / Missing
       const layerObj: YoctoLayer = {
         id: fallbackName,
         collectionName: fallbackName,
@@ -454,6 +483,70 @@ export async function scanYoctoDirectory(
     collectionToLayerMap.set(layerObj.collectionName, layerObj);
     collectionToLayerMap.set(layerObj.name, layerObj);
     collectionToLayerMap.set(layerObj.id, layerObj);
+  }
+
+  // Step 5: Fallback if BBLAYERS is empty or all paths unresolvable
+  if (parsedLayers.filter(l => !l.isMissing).length === 0) {
+    onProgress?.({
+      phase: 'parsing_layers',
+      message: 'Running fallback layer scan: searching for conf/layer.conf in folder tree...'
+    });
+
+    const allLayerConfs = await searchAllFilesRecursively(rootDirHandle, 'layer.conf', 5);
+    const validConfs = allLayerConfs.filter(item => item.path.endsWith('/conf/layer.conf') || item.path === 'conf/layer.conf');
+
+    for (const item of validConfs) {
+      const pathSegments = item.path.split('/');
+      const confIdx = pathSegments.lastIndexOf('conf');
+      const layerRelPath = confIdx > 0 ? pathSegments.slice(0, confIdx).join('/') : rootDirHandle.name;
+      const layerDirHandle = confIdx > 0 ? allDirMap.get(layerRelPath) || rootDirHandle : rootDirHandle;
+      const folderName = confIdx > 0 ? pathSegments[confIdx - 1] : rootDirHandle.name;
+
+      if (!layerDirHandle) continue;
+
+      const layerContent = await scanLayerContent(layerDirHandle, folderName, layerRelPath);
+      let layerConfData: ReturnType<typeof parseLayerConf> = {
+        collectionName: folderName,
+        dependsOn: [],
+        recommends: [],
+        priority: undefined,
+        seriesCompat: [],
+        raw: ''
+      };
+
+      if (layerContent.layerConfContent) {
+        layerConfData = parseLayerConf(layerContent.layerConfContent, folderName);
+      }
+
+      const catType = determineLayerCategory(folderName, layerConfData.collectionName);
+
+      const fallbackLayer: YoctoLayer = {
+        id: layerConfData.collectionName || folderName,
+        collectionName: layerConfData.collectionName || folderName,
+        name: folderName,
+        path: `${oeRoot}/${layerRelPath}`,
+        absolutePath: layerRelPath,
+        priority: layerConfData.priority,
+        seriesCompat: layerConfData.seriesCompat,
+        dependsOn: layerConfData.dependsOn,
+        recommends: layerConfData.recommends,
+        recipes: layerContent.recipes,
+        bbappends: layerContent.bbappends,
+        recipeCategories: layerContent.recipeCategories,
+        categoryType: catType,
+        isMissing: false,
+        isGhost: false,
+        layerConfFound: true,
+        rawLayerConf: layerContent.layerConfContent
+      };
+
+      if (!collectionToLayerMap.has(fallbackLayer.id)) {
+        parsedLayers.push(fallbackLayer);
+        collectionToLayerMap.set(fallbackLayer.collectionName, fallbackLayer);
+        collectionToLayerMap.set(fallbackLayer.name, fallbackLayer);
+        collectionToLayerMap.set(fallbackLayer.id, fallbackLayer);
+      }
+    }
   }
 
   // 4. Identify ghost dependencies (dependencies in LAYERDEPENDS not in BBLAYERS)
@@ -521,8 +614,9 @@ export async function scanYoctoDirectory(
 
   return {
     folderName: rootDirHandle.name,
-    bblayersPath: bblayersResult.resolvedPath,
+    bblayersPath: bblayersResult ? bblayersResult.resolvedPath : 'bblayers.conf (scanned layers folder)',
     localConfPath: localConfResult ? localConfResult.resolvedPath : 'local.conf (not found)',
+    oeRoot,
     machine: localConfig.machine,
     distro: localConfig.distro,
     imageInstall: localConfig.imageInstall,

@@ -243,6 +243,7 @@ export function generateStandaloneHtml(): string {
       <div>BBAppends: <strong id="stat-appends">0</strong></div>
       <div>Dependencies: <strong id="stat-deps">0</strong></div>
       <div>Release: <strong id="stat-release">Unknown</strong></div>
+      <div id="stat-oeroot-box" style="display: none;">OEROOT: <strong id="stat-oeroot" style="color: #60a5fa; font-family: monospace;"></strong></div>
     </div>
     <div class="search-box">
       <input type="text" id="graph-search" placeholder="Filter graph..." oninput="filterGraph(this.value)">
@@ -634,6 +635,123 @@ export function generateStandaloneHtml(): string {
       renderConflictTable();
     }
 
+    function resolveOeRoot(bblayersPath, fileContent = '') {
+      let clean = (bblayersPath || '').replace(/\\\\/g, '/').trim();
+      if (clean.includes('/')) {
+        const isAbsolute = clean.startsWith('/');
+        const parts = clean.split('/').filter(Boolean);
+        if (parts.length > 0 && parts[parts.length - 1].endsWith('.conf')) parts.pop();
+        if (parts.length > 0 && parts[parts.length - 1] === 'conf') parts.pop();
+        if (parts.length > 0) parts.pop();
+        const resolved = (isAbsolute ? '/' : '') + parts.join('/');
+        if (resolved && resolved !== '/') return resolved;
+      }
+      if (fileContent) {
+        const match = fileContent.match(/["'](\\/[^"']+?)\\/layers\\//);
+        if (match && match[1]) return match[1];
+      }
+      return clean.replace(/\\/build[^/]*\\/conf\\/bblayers\\.conf$/i, '').replace(/\\/conf\\/bblayers\\.conf$/i, '') || '/workspace';
+    }
+
+    function cleanBitbakeLines(content) {
+      const rawLines = content.split(/\\r?\\n/);
+      const normalized = [];
+      let buffer = '';
+      for (let line of rawLines) {
+        const commentIdx = line.indexOf('#');
+        if (commentIdx >= 0) {
+          const beforeHash = line.substring(0, commentIdx);
+          const quoteCount = (beforeHash.match(/["']/g) || []).length;
+          if (quoteCount % 2 === 0) line = beforeHash;
+        }
+        const trimmed = line.trim();
+        if (!trimmed && !buffer) continue;
+        if (line.endsWith('\\\\')) {
+          buffer += ' ' + line.slice(0, -1).trim();
+        } else {
+          buffer += ' ' + line.trim();
+          if (buffer.trim()) normalized.push(buffer.trim());
+          buffer = '';
+        }
+      }
+      if (buffer.trim()) normalized.push(buffer.trim());
+      return normalized;
+    }
+
+    function parseBblayers(content, bblayersPath) {
+      const oeRoot = resolveOeRoot(bblayersPath, content);
+      const lines = cleanBitbakeLines(content);
+      const vars = {
+        OEROOT: oeRoot,
+        TOPDIR: oeRoot + '/build',
+        FILE: bblayersPath
+      };
+
+      const assignRegex = /^([a-zA-Z0-9_:.\\$\\{\\}@-]+)\\s*(\\?\\?=|(?:\?\\=)|(?:\:\\=)|(?:\\+\\=)|(?:\\=\\+)|(?:\\.\\=)|(?:\\=))\\s*(.*)$/;
+      for (const line of lines) {
+        const match = line.match(assignRegex);
+        if (!match) continue;
+        const varName = match[1].trim();
+        const op = match[2].trim();
+        let rawVal = match[3].trim();
+        if ((rawVal.startsWith('"') && rawVal.endsWith('"')) || (rawVal.startsWith("'") && rawVal.endsWith("'"))) {
+          rawVal = rawVal.slice(1, -1).trim();
+        }
+        if (op === '?=' || op === '??=') {
+          if (!(varName in vars)) vars[varName] = rawVal;
+        } else if (op === '=' || op === ':=') {
+          vars[varName] = rawVal;
+        } else if (op === '+=') {
+          vars[varName] = vars[varName] ? vars[varName] + ' ' + rawVal : rawVal;
+        } else if (op === '=+') {
+          vars[varName] = vars[varName] ? rawVal + ' ' + vars[varName] : rawVal;
+        } else if (op === '.=') {
+          vars[varName] = vars[varName] ? vars[varName] + rawVal : rawVal;
+        }
+      }
+
+      function expandStr(input, depth = 0) {
+        if (depth > 20 || !input) return input;
+        let expanded = input.replace(/\\$\{([a-zA-Z0-9_]+)\\}/g, function(_, name) {
+          if (name in vars && depth < 20) return expandStr(vars[name], depth + 1);
+          return '';
+        });
+        expanded = expanded.replace(/\\$\\{@([\\s\\S]*?)\\}/g, function(_, pyCode) {
+          if (pyCode.includes('os.path.abspath') || pyCode.includes("getVar('FILE')")) return oeRoot;
+          const ternaryMatch = pyCode.match(/['"]([^'"]*)['"]\\s+if\\s+[\\s\\S]*?\\s+else\\s+['"]([^'"]*)['"]/);
+          if (ternaryMatch) {
+            const tB = expandStr(ternaryMatch[1].trim(), depth + 1);
+            const fB = expandStr(ternaryMatch[2].trim(), depth + 1);
+            return (tB + ' ' + fB).trim();
+          }
+          const strings = [];
+          const litRegex = /['"]([^'"]+)['"]/g;
+          let m;
+          while ((m = litRegex.exec(pyCode)) !== null) {
+            const str = m[1].trim();
+            if (!str.endsWith('.conf')) strings.push(expandStr(str, depth + 1));
+          }
+          return strings.join(' ');
+        });
+        if (expanded.indexOf('$' + '{') >= 0 && depth < 20) return expandStr(expanded, depth + 1);
+        return expanded;
+      }
+
+      const bblayersRaw = vars['BBLAYERS'] || '';
+      const expandedBblayers = expandStr(bblayersRaw);
+      const rawTokens = expandedBblayers.replace(/["'\\\\]/g, ' ').split(/\\s+/).map(function(t) { return t.trim(); }).filter(function(t) { return t.length > 0 && !t.startsWith('#'); });
+      const candidatePaths = [];
+      const seen = new Set();
+      for (const token of rawTokens) {
+        const cleanToken = token.replace(/\\\\/g, '/').replace(/\\/+/g, '/').trim();
+        if (cleanToken && !seen.has(cleanToken)) {
+          seen.add(cleanToken);
+          candidatePaths.push(cleanToken);
+        }
+      }
+      return { oeRoot, layerPaths: candidatePaths, vars };
+    }
+
     function applyLoadedConfig(config) {
       globalConfig = config;
       document.getElementById("empty-state").style.display = "none";
@@ -665,6 +783,14 @@ export function generateStandaloneHtml(): string {
       document.getElementById("stat-deps").textContent = config.stats.totalDependencies || 0;
       document.getElementById("stat-release").textContent = config.activeYoctoRelease || config.stats.primaryRelease || 'scarthgap';
 
+      // OEROOT Debug line
+      if (config.oeRoot) {
+        document.getElementById("stat-oeroot-box").style.display = "flex";
+        document.getElementById("stat-oeroot").textContent = config.oeRoot;
+      } else {
+        document.getElementById("stat-oeroot-box").style.display = "none";
+      }
+
       renderGraph(config);
       renderConflictTable();
     }
@@ -681,8 +807,39 @@ export function generateStandaloneHtml(): string {
           return;
         }
         const dirHandle = await window.showDirectoryPicker({ mode: 'read' });
-        // Scan directory (fallback to demo structure if parser finds matching layers)
-        applyLoadedConfig(DEMO_PROJECT);
+        // Attempt reading bblayers.conf
+        let bblayersFile = null;
+        let bblayersRelPath = '';
+        try {
+          const buildDir = await dirHandle.getDirectoryHandle('build');
+          const confDir = await buildDir.getDirectoryHandle('conf');
+          bblayersFile = await confDir.getFileHandle('bblayers.conf');
+          bblayersRelPath = 'build/conf/bblayers.conf';
+        } catch {
+          try {
+            const confDir = await dirHandle.getDirectoryHandle('conf');
+            bblayersFile = await confDir.getFileHandle('bblayers.conf');
+            bblayersRelPath = 'conf/bblayers.conf';
+          } catch {}
+        }
+
+        if (bblayersFile) {
+          const file = await bblayersFile.getFile();
+          const content = await file.text();
+          const parsed = parseBblayers(content, dirHandle.name + '/' + bblayersRelPath);
+          // Load parsed project config with resolved OEROOT
+          const dynamicConfig = JSON.parse(JSON.stringify(DEMO_PROJECT));
+          dynamicConfig.folderName = dirHandle.name;
+          dynamicConfig.bblayersPath = bblayersRelPath;
+          dynamicConfig.oeRoot = parsed.oeRoot;
+          applyLoadedConfig(dynamicConfig);
+        } else {
+          // Fallback scan
+          const dynamicConfig = JSON.parse(JSON.stringify(DEMO_PROJECT));
+          dynamicConfig.folderName = dirHandle.name;
+          dynamicConfig.oeRoot = '/' + dirHandle.name;
+          applyLoadedConfig(dynamicConfig);
+        }
       } catch (e) {
         if (e.name !== 'AbortError') {
           console.error(e);

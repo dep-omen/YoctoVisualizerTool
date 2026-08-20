@@ -4,6 +4,7 @@ export const DEMO_YOCTO_PROJECT: YoctoBuildConfig = {
   folderName: 'openstlinux-workspace',
   bblayersPath: 'build-openstlinuxweston-stm32mp157f-dk2/conf/bblayers.conf',
   localConfPath: 'build-openstlinuxweston-stm32mp157f-dk2/conf/local.conf',
+  oeRoot: '/home/rrp/openstlinux-workspace',
   machine: 'stm32mp157f-dk2',
   distro: 'openstlinux-weston',
   imageInstall: ['st-image-weston', 'packagegroup-framework-core', 'gstreamer1.0-plugins-bad', 'python3-pyserial', 'st-demo-dashboard'],
