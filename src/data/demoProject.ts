@@ -166,8 +166,10 @@ export const DEMO_YOCTO_PROJECT: YoctoBuildConfig = {
       isMissing: false,
       isGhost: false,
       layerConfFound: true,
-      recipeCategories: ['recipes-bsp', 'recipes-kernel', 'recipes-graphics', 'recipes-st', 'recipes-extended'],
+      recipeCategories: ['recipes-bsp', 'recipes-kernel', 'recipes-graphics', 'recipes-st', 'recipes-extended', 'recipes-support'],
       recipes: [
+        { name: 'curl', filename: 'curl_8.8.0.bb', category: 'recipes-extended', relativePath: 'recipes-extended/curl/curl_8.8.0.bb', version: '8.8.0' },
+        { name: 'libiio', filename: 'libiio_0.25.bb', category: 'recipes-support', relativePath: 'recipes-support/libiio/libiio_0.25.bb', version: '0.25' },
         { name: 'linux-stm32mp', filename: 'linux-stm32mp_6.6.bb', category: 'recipes-kernel', relativePath: 'recipes-kernel/linux/linux-stm32mp_6.6.bb', version: '6.6' },
         { name: 'u-boot-stm32mp', filename: 'u-boot-stm32mp_2023.10.bb', category: 'recipes-bsp', relativePath: 'recipes-bsp/u-boot/u-boot-stm32mp_2023.10.bb', version: '2023.10' },
         { name: 'tf-a-stm32mp', filename: 'tf-a-stm32mp_2.10.bb', category: 'recipes-bsp', relativePath: 'recipes-bsp/trusted-firmware-a/tf-a-stm32mp_2.10.bb', version: '2.10' },
@@ -198,8 +200,10 @@ export const DEMO_YOCTO_PROJECT: YoctoBuildConfig = {
       isMissing: false,
       isGhost: false,
       layerConfFound: true,
-      recipeCategories: ['recipes-st', 'recipes-samples', 'recipes-framework'],
+      recipeCategories: ['recipes-st', 'recipes-samples', 'recipes-framework', 'recipes-core', 'recipes-support'],
       recipes: [
+        { name: 'base-files', filename: 'base-files_3.0.15.bb', category: 'recipes-core', relativePath: 'recipes-core/base-files/base-files_3.0.15.bb', version: '3.0.15' },
+        { name: 'htop', filename: 'htop_3.3.0.bb', category: 'recipes-support', relativePath: 'recipes-support/htop/htop_3.3.0.bb', version: '3.3.0' },
         { name: 'packagegroup-framework-core', filename: 'packagegroup-framework-core.bb', category: 'recipes-framework', relativePath: 'recipes-framework/packagegroups/packagegroup-framework-core.bb' },
         { name: 'st-demo-dashboard', filename: 'st-demo-dashboard_2.1.bb', category: 'recipes-samples', relativePath: 'recipes-samples/demo/st-demo-dashboard_2.1.bb', version: '2.1' },
         { name: 'st-ai-engine', filename: 'st-ai-engine_1.5.0.bb', category: 'recipes-framework', relativePath: 'recipes-framework/ai/st-ai-engine_1.5.0.bb', version: '1.5.0' },
@@ -208,7 +212,8 @@ export const DEMO_YOCTO_PROJECT: YoctoBuildConfig = {
       ],
       bbappends: [
         { filename: 'gstreamer1.0-plugins-bad_%.bbappend', targetRecipe: 'gstreamer1.0-plugins-bad', category: 'recipes-multimedia', relativePath: 'recipes-multimedia/gstreamer/gstreamer1.0-plugins-bad_%.bbappend' },
-        { filename: 'base-files_%.bbappend', targetRecipe: 'base-files', category: 'recipes-core', relativePath: 'recipes-core/base-files/base-files_%.bbappend' }
+        { filename: 'base-files_%.bbappend', targetRecipe: 'base-files', category: 'recipes-core', relativePath: 'recipes-core/base-files/base-files_%.bbappend' },
+        { filename: 'qtbase_%.bbappend', targetRecipe: 'qtbase', category: 'recipes-qt', relativePath: 'recipes-qt/qt5/qtbase_%.bbappend' }
       ]
     },
     {
@@ -224,8 +229,11 @@ export const DEMO_YOCTO_PROJECT: YoctoBuildConfig = {
       isMissing: false,
       isGhost: false,
       layerConfFound: true,
-      recipeCategories: ['recipes-apps', 'recipes-core', 'recipes-telemetry'],
+      recipeCategories: ['recipes-apps', 'recipes-core', 'recipes-telemetry', 'recipes-bsp', 'recipes-connectivity'],
       recipes: [
+        { name: 'u-boot', filename: 'u-boot_2024.04.bb', category: 'recipes-bsp', relativePath: 'recipes-bsp/u-boot/u-boot_2024.04.bb', version: '2024.04' },
+        { name: 'openssh', filename: 'openssh_9.7p1.bb', category: 'recipes-connectivity', relativePath: 'recipes-connectivity/openssh/openssh_9.7p1.bb', version: '9.7p1' },
+        { name: 'st-udev-rules', filename: 'st-udev-rules_1.0.bb', category: 'recipes-bsp', relativePath: 'recipes-bsp/udev/st-udev-rules_1.0.bb' },
         { name: 'iot-gateway-service', filename: 'iot-gateway-service_1.4.2.bb', category: 'recipes-apps', relativePath: 'recipes-apps/gateway/iot-gateway-service_1.4.2.bb', version: '1.4.2' },
         { name: 'hmi-touch-ui', filename: 'hmi-touch-ui_2.0.0.bb', category: 'recipes-apps', relativePath: 'recipes-apps/hmi/hmi-touch-ui_2.0.0.bb', version: '2.0.0' },
         { name: 'sensor-telemetry-daemon', filename: 'sensor-telemetry-daemon_1.1.0.bb', category: 'recipes-telemetry', relativePath: 'recipes-telemetry/sensor/sensor-telemetry-daemon_1.1.0.bb', version: '1.1.0' },
@@ -234,7 +242,8 @@ export const DEMO_YOCTO_PROJECT: YoctoBuildConfig = {
       bbappends: [
         { filename: 'linux-stm32mp_%.bbappend', targetRecipe: 'linux-stm32mp', category: 'recipes-kernel', relativePath: 'recipes-kernel/linux/linux-stm32mp_%.bbappend' },
         { filename: 'u-boot-stm32mp_%.bbappend', targetRecipe: 'u-boot-stm32mp', category: 'recipes-bsp', relativePath: 'recipes-bsp/u-boot/u-boot-stm32mp_%.bbappend' },
-        { filename: 'busybox_%.bbappend', targetRecipe: 'busybox', category: 'recipes-core', relativePath: 'recipes-core/busybox/busybox_%.bbappend' }
+        { filename: 'busybox_%.bbappend', targetRecipe: 'busybox', category: 'recipes-core', relativePath: 'recipes-core/busybox/busybox_%.bbappend' },
+        { filename: 'legacy-wifi-driver_%.bbappend', targetRecipe: 'legacy-wifi-driver', category: 'recipes-bsp', relativePath: 'recipes-bsp/wifi/legacy-wifi-driver_%.bbappend' }
       ]
     },
     {

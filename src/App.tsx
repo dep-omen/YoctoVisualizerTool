@@ -1,16 +1,19 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { YoctoBuildConfig, YoctoLayer } from './types';
 import { scanYoctoDirectory, ScanProgressCallback } from './utils/fileSystemScanner';
 import { DEMO_YOCTO_PROJECT } from './data/demoProject';
 import { generateStandaloneHtml } from './utils/standaloneHtmlGenerator';
+import { detectYoctoConflicts } from './utils/conflictDetector';
 import { HeaderBar } from './components/HeaderBar';
 import { StatsBar } from './components/StatsBar';
 import { LayerGraph, LayerGraphRef } from './components/LayerGraph';
 import { LayerDetailPanel } from './components/LayerDetailPanel';
+import { ConflictDetector } from './components/ConflictDetector';
 import { EmptyState } from './components/EmptyState';
 
 export default function App() {
   const [config, setConfig] = useState<YoctoBuildConfig | null>(null);
+  const [activeTab, setActiveTab] = useState<'graph' | 'conflicts'>('graph');
   const [selectedLayer, setSelectedLayer] = useState<YoctoLayer | null>(null);
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -23,6 +26,15 @@ export default function App() {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const graphRef = useRef<LayerGraphRef>(null);
+
+  // Compute conflict stats for tab badge
+  const conflictResult = useMemo(() => {
+    if (!config) return null;
+    return detectYoctoConflicts(config);
+  }, [config]);
+
+  const conflictCount = conflictResult ? conflictResult.stats.totalConflicts : 0;
+  const criticalCount = conflictResult ? conflictResult.stats.criticalConflicts : 0;
 
   // File System Access API: Pick Yocto Project Folder
   const handleOpenFolder = async () => {
@@ -135,6 +147,10 @@ export default function App() {
       {/* Header Bar */}
       <HeaderBar
         config={config}
+        activeTab={activeTab}
+        onTabChange={setActiveTab}
+        conflictCount={conflictCount}
+        criticalCount={criticalCount}
         onOpenFolder={handleOpenFolder}
         onFitGraph={handleFitGraph}
         onExportPng={handleExportPng}
@@ -143,8 +159,8 @@ export default function App() {
         isScanning={isScanning}
       />
 
-      {/* Stats Bar */}
-      {config && (
+      {/* Stats Bar (Shown on Graph Tab when config is loaded) */}
+      {config && activeTab === 'graph' && (
         <StatsBar
           config={config}
           searchFilter={searchFilter}
@@ -155,28 +171,33 @@ export default function App() {
       {/* Main Workspace Area */}
       <main className="flex-1 relative flex overflow-hidden">
         {config ? (
-          <>
-            {/* Graph Visualizer Canvas */}
-            <div className="flex-1 h-full relative">
-              <LayerGraph
-                ref={graphRef}
-                config={config}
-                selectedLayer={selectedLayer}
-                onSelectLayer={handleSelectLayer}
-                searchFilter={searchFilter}
-              />
-            </div>
+          activeTab === 'graph' ? (
+            <>
+              {/* Graph Visualizer Canvas */}
+              <div className="flex-1 h-full relative">
+                <LayerGraph
+                  ref={graphRef}
+                  config={config}
+                  selectedLayer={selectedLayer}
+                  onSelectLayer={handleSelectLayer}
+                  searchFilter={searchFilter}
+                />
+              </div>
 
-            {/* Right-Side Detail Panel */}
-            {selectedLayer && (
-              <LayerDetailPanel
-                layer={selectedLayer}
-                allConfig={config}
-                onClose={() => setSelectedLayer(null)}
-                onSelectLayer={handleSelectLayerById}
-              />
-            )}
-          </>
+              {/* Right-Side Detail Panel */}
+              {selectedLayer && (
+                <LayerDetailPanel
+                  layer={selectedLayer}
+                  allConfig={config}
+                  onClose={() => setSelectedLayer(null)}
+                  onSelectLayer={handleSelectLayerById}
+                />
+              )}
+            </>
+          ) : (
+            /* Conflict Detector View */
+            <ConflictDetector config={config} />
+          )
         ) : (
           /* Empty Landing State */
           <EmptyState
@@ -191,3 +212,4 @@ export default function App() {
     </div>
   );
 }
+

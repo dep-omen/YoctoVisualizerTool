@@ -7,11 +7,18 @@ import {
   FileCode,
   Layers,
   ChevronDown,
-  Sparkles
+  Sparkles,
+  ShieldAlert,
+  Network,
+  CheckCircle2
 } from 'lucide-react';
 
 interface HeaderBarProps {
   config: YoctoBuildConfig | null;
+  activeTab: 'graph' | 'conflicts';
+  onTabChange: (tab: 'graph' | 'conflicts') => void;
+  conflictCount: number;
+  criticalCount: number;
   onOpenFolder: () => void;
   onFitGraph: () => void;
   onExportPng: () => void;
@@ -22,6 +29,10 @@ interface HeaderBarProps {
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
   config,
+  activeTab,
+  onTabChange,
+  conflictCount,
+  criticalCount,
   onOpenFolder,
   onFitGraph,
   onExportPng,
@@ -34,7 +45,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   return (
     <header
       id="yocto-header-bar"
-      className="h-14 border-b border-gray-800 flex items-center px-4 justify-between bg-[#161b22] shrink-0 z-30 select-none"
+      className="h-14 border-b border-gray-800 flex items-center px-4 justify-between bg-[#161b22] shrink-0 z-30 select-none gap-2"
     >
       {/* Left: Brand + BitBake Config Specs */}
       <div className="flex items-center gap-3 min-w-0">
@@ -42,15 +53,61 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center shadow-sm shadow-blue-500/30">
             <span className="text-[10px] font-black text-white font-mono tracking-tighter">YO</span>
           </div>
-          <h1 className="font-semibold text-sm tracking-tight text-white truncate">
+          <h1 className="font-semibold text-sm tracking-tight text-white truncate hidden sm:block">
             Yocto Layer Visualizer
           </h1>
         </div>
 
+        {/* Tab Switcher */}
+        {config && (
+          <div className="flex items-center bg-[#0d1117] p-0.5 rounded-lg border border-gray-800 ml-1">
+            <button
+              id="tab-layer-graph-btn"
+              onClick={() => onTabChange('graph')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
+                activeTab === 'graph'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60'
+              }`}
+            >
+              <Network className="w-3.5 h-3.5" />
+              <span>Layer Graph</span>
+            </button>
+
+            <button
+              id="tab-conflict-detector-btn"
+              onClick={() => onTabChange('conflicts')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
+                activeTab === 'conflicts'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60'
+              }`}
+            >
+              <ShieldAlert className={`w-3.5 h-3.5 ${criticalCount > 0 ? 'text-red-400' : conflictCount > 0 ? 'text-amber-400' : 'text-green-400'}`} />
+              <span>Conflict Detector</span>
+              {conflictCount > 0 ? (
+                <span
+                  className={`ml-0.5 px-1.5 py-0.2 rounded-full font-mono text-[10px] font-bold ${
+                    criticalCount > 0
+                      ? 'bg-red-500 text-white animate-pulse'
+                      : activeTab === 'conflicts'
+                      ? 'bg-white text-blue-900'
+                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                  }`}
+                >
+                  {conflictCount}
+                </span>
+              ) : (
+                <CheckCircle2 className="w-3 h-3 text-green-400 ml-0.5" />
+              )}
+            </button>
+          </div>
+        )}
+
         {config && (
           <>
-            <div className="h-4 w-[1px] bg-gray-700 mx-1 hidden sm:block shrink-0" />
-            <div className="hidden md:flex items-center gap-2 text-[10px] overflow-hidden">
+            <div className="h-4 w-[1px] bg-gray-700 mx-1 hidden lg:block shrink-0" />
+            <div className="hidden xl:flex items-center gap-2 text-[10px] overflow-hidden">
               {config.machine && (
                 <span
                   className="px-2 py-1 bg-gray-800 rounded text-blue-400 font-mono truncate"
@@ -66,16 +123,6 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
                 >
                   DISTRO: {config.distro}
                 </span>
-              )}
-              {config.distroFeatures && config.distroFeatures.length > 0 && (
-                <button
-                  onClick={() => setShowDistroFeaturesModal(true)}
-                  className="px-2 py-1 bg-gray-800 hover:bg-gray-700 rounded text-gray-300 font-mono truncate transition flex items-center gap-1"
-                  title="Click to view all DISTRO_FEATURES"
-                >
-                  <span>DISTRO_FEATURES: [{config.distroFeatures.slice(0, 3).join(', ')}{config.distroFeatures.length > 3 ? '...' : ''}]</span>
-                  <ChevronDown className="w-2.5 h-2.5 text-gray-400" />
-                </button>
               )}
             </div>
           </>
@@ -95,8 +142,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           <span>Demo Data</span>
         </button>
 
-        {/* Fit Graph */}
-        {config && (
+        {/* Fit Graph (only on graph tab) */}
+        {config && activeTab === 'graph' && (
           <button
             id="fit-graph-btn"
             onClick={onFitGraph}
@@ -108,8 +155,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           </button>
         )}
 
-        {/* Export PNG */}
-        {config && (
+        {/* Export PNG (only on graph tab) */}
+        {config && activeTab === 'graph' && (
           <button
             id="export-png-btn"
             onClick={onExportPng}
@@ -125,7 +172,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
         <button
           id="export-standalone-html-btn"
           onClick={onDownloadHtml}
-          className="hidden xl:flex items-center gap-1.5 px-3 py-1.5 bg-[#21262d] border border-gray-700 rounded text-xs text-gray-200 hover:bg-[#30363d] transition font-medium"
+          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-[#21262d] border border-gray-700 rounded text-xs text-gray-200 hover:bg-[#30363d] transition font-medium"
           title="Download single self-contained HTML file"
         >
           <FileCode className="w-3.5 h-3.5 text-purple-400" />

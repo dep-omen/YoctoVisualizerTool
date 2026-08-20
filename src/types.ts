@@ -23,6 +23,53 @@ export type LayerCategory =
   | 'missing'
   | 'ghost';
 
+export type ConflictType = 'VERSION BUMP' | 'FORK' | 'CRITICAL';
+
+export interface LosingRecipeInfo {
+  layer: YoctoLayer;
+  version?: string;
+  priority: number;
+  filename: string;
+  path: string;
+  relativePath: string;
+}
+
+export interface ConflictItem {
+  id: string;
+  recipeName: string;
+  winningLayer: YoctoLayer;
+  winningVersion?: string;
+  winningPriority: number;
+  winningFilename: string;
+  winningPath: string;
+  winningRelativePath: string;
+  losingLayers: LosingRecipeInfo[];
+  type: ConflictType;
+  isCritical: boolean;
+  explanation: string;
+}
+
+export interface OrphanBbappend {
+  id: string;
+  filename: string;
+  layer: YoctoLayer;
+  targetRecipe: string;
+  category: string;
+  relativePath: string;
+  fullPath: string;
+}
+
+export interface ConflictDetectionResult {
+  conflicts: ConflictItem[];
+  orphanBbappends: OrphanBbappend[];
+  stats: {
+    totalConflicts: number;
+    silentOverrides: number;
+    criticalConflicts: number;
+    orphanBbappends: number;
+  };
+}
+
 export interface YoctoLayer {
   id: string; // canonical name from BBFILE_COLLECTIONS or folder name
   collectionName: string;
