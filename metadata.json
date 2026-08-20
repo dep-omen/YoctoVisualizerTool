@@ -1,0 +1,6 @@
+{
+  "name": "Yocto Layer Visualizer",
+  "description": "Interactive Yocto build directory and layer dependency visualizer with BitBake configuration parser and D3 force graph.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
