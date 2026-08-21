@@ -369,6 +369,8 @@ export async function scanYoctoDirectory(
 
   let oeRoot = resolveOeRoot(bblayersResult ? bblayersResult.resolvedPath : rootDirHandle.name);
   let rawLayerPaths: string[] = [];
+  const isFallbackMode = !bblayersResult;
+  const discoveryMode: 'bblayers' | 'fallback' = isFallbackMode ? 'fallback' : 'bblayers';
 
   if (bblayersResult) {
     const bblayersContent = await readFileText(bblayersResult.handle);
@@ -377,7 +379,7 @@ export async function scanYoctoDirectory(
     rawLayerPaths = parsedBblayers.layerPaths;
   }
 
-  // 2. Locate local.conf
+  // 2. Locate local.conf (only when bblayers.conf was found or local.conf exists)
   let localConfResult = await findFileByPath(rootDirHandle, ['build', 'conf', 'local.conf']);
   if (!localConfResult) {
     localConfResult = await findFileByPath(rootDirHandle, ['conf', 'local.conf']);
@@ -390,119 +392,132 @@ export async function scanYoctoDirectory(
   }
 
   let localConfig: Partial<ReturnType<typeof parseLocalConf>> = {};
-  if (localConfResult) {
+  if (localConfResult && !isFallbackMode) {
     const localContent = await readFileText(localConfResult.handle);
     localConfig = parseLocalConf(localContent);
   }
 
-  onProgress?.({
-    phase: 'parsing_layers',
-    message: `Discovered ${rawLayerPaths.length} layer candidate(s). Verifying filesystem handles...`,
-    total: rawLayerPaths.length
-  });
-
-  // 3. Process each layer candidate
   const parsedLayers: YoctoLayer[] = [];
   const collectionToLayerMap = new Map<string, YoctoLayer>();
-  let processedCount = 0;
 
-  for (const rawPath of rawLayerPaths) {
-    processedCount++;
-    const pathParts = rawPath.replace(/\\/g, '/').split('/').filter(Boolean);
-    const fallbackName = pathParts[pathParts.length - 1] || 'layer';
-
+  if (!isFallbackMode) {
     onProgress?.({
-      phase: 'scanning_recipes',
-      message: `Scanning ${fallbackName} (${processedCount}/${rawLayerPaths.length})...`,
-      processed: processedCount,
+      phase: 'parsing_layers',
+      message: `Discovered ${rawLayerPaths.length} layer candidate(s) in BBLAYERS. Verifying filesystem handles...`,
       total: rawLayerPaths.length
     });
 
-    const dirRes = await resolveLayerDirectory(rootDirHandle, rawPath, oeRoot, allDirMap);
+    // 3. Process each layer candidate from BBLAYERS
+    let processedCount = 0;
 
-    if (!dirRes) {
-      // Layer candidate not found on disk -> Ghost / Missing
-      const layerObj: YoctoLayer = {
-        id: fallbackName,
+    for (const rawPath of rawLayerPaths) {
+      processedCount++;
+      const pathParts = rawPath.replace(/\\/g, '/').split('/').filter(Boolean);
+      const fallbackName = pathParts[pathParts.length - 1] || 'layer';
+
+      onProgress?.({
+        phase: 'scanning_recipes',
+        message: `Scanning ${fallbackName} (${processedCount}/${rawLayerPaths.length})...`,
+        processed: processedCount,
+        total: rawLayerPaths.length
+      });
+
+      const dirRes = await resolveLayerDirectory(rootDirHandle, rawPath, oeRoot, allDirMap);
+
+      if (!dirRes) {
+        // Layer candidate not found on disk -> Ghost / Missing
+        const layerObj: YoctoLayer = {
+          id: fallbackName,
+          collectionName: fallbackName,
+          name: fallbackName,
+          path: rawPath,
+          seriesCompat: [],
+          dependsOn: [],
+          recipes: [],
+          bbappends: [],
+          recipeCategories: [],
+          categoryType: 'missing',
+          isMissing: true,
+          isGhost: false,
+          layerConfFound: false
+        };
+        parsedLayers.push(layerObj);
+        collectionToLayerMap.set(fallbackName, layerObj);
+        continue;
+      }
+
+      // Scan layer content
+      const layerContent = await scanLayerContent(dirRes.handle, fallbackName, dirRes.relativePath);
+      let layerConfData: ReturnType<typeof parseLayerConf> = {
         collectionName: fallbackName,
+        dependsOn: [],
+        recommends: [],
+        priority: undefined,
+        seriesCompat: [],
+        raw: ''
+      };
+
+      if (layerContent.layerConfContent) {
+        layerConfData = parseLayerConf(layerContent.layerConfContent, fallbackName);
+      }
+
+      const catType = determineLayerCategory(fallbackName, layerConfData.collectionName);
+
+      const layerObj: YoctoLayer = {
+        id: layerConfData.collectionName || fallbackName,
+        collectionName: layerConfData.collectionName || fallbackName,
         name: fallbackName,
         path: rawPath,
-        seriesCompat: [],
-        dependsOn: [],
-        recipes: [],
-        bbappends: [],
-        recipeCategories: [],
-        categoryType: 'missing',
-        isMissing: true,
+        absolutePath: dirRes.relativePath,
+        priority: layerConfData.priority,
+        seriesCompat: layerConfData.seriesCompat,
+        dependsOn: layerConfData.dependsOn,
+        recommends: layerConfData.recommends,
+        recipes: layerContent.recipes,
+        bbappends: layerContent.bbappends,
+        recipeCategories: layerContent.recipeCategories,
+        categoryType: catType,
+        isMissing: false,
         isGhost: false,
-        layerConfFound: false
+        layerConfFound: !!layerContent.layerConfContent,
+        rawLayerConf: layerContent.layerConfContent
       };
+
       parsedLayers.push(layerObj);
-      collectionToLayerMap.set(fallbackName, layerObj);
-      continue;
+      collectionToLayerMap.set(layerObj.collectionName, layerObj);
+      collectionToLayerMap.set(layerObj.name, layerObj);
+      collectionToLayerMap.set(layerObj.id, layerObj);
     }
-
-    // Scan layer content
-    const layerContent = await scanLayerContent(dirRes.handle, fallbackName, dirRes.relativePath);
-    let layerConfData: ReturnType<typeof parseLayerConf> = {
-      collectionName: fallbackName,
-      dependsOn: [],
-      recommends: [],
-      priority: undefined,
-      seriesCompat: [],
-      raw: ''
-    };
-
-    if (layerContent.layerConfContent) {
-      layerConfData = parseLayerConf(layerContent.layerConfContent, fallbackName);
-    }
-
-    const catType = determineLayerCategory(fallbackName, layerConfData.collectionName);
-
-    const layerObj: YoctoLayer = {
-      id: layerConfData.collectionName || fallbackName,
-      collectionName: layerConfData.collectionName || fallbackName,
-      name: fallbackName,
-      path: rawPath,
-      absolutePath: dirRes.relativePath,
-      priority: layerConfData.priority,
-      seriesCompat: layerConfData.seriesCompat,
-      dependsOn: layerConfData.dependsOn,
-      recommends: layerConfData.recommends,
-      recipes: layerContent.recipes,
-      bbappends: layerContent.bbappends,
-      recipeCategories: layerContent.recipeCategories,
-      categoryType: catType,
-      isMissing: false,
-      isGhost: false,
-      layerConfFound: !!layerContent.layerConfContent,
-      rawLayerConf: layerContent.layerConfContent
-    };
-
-    parsedLayers.push(layerObj);
-    collectionToLayerMap.set(layerObj.collectionName, layerObj);
-    collectionToLayerMap.set(layerObj.name, layerObj);
-    collectionToLayerMap.set(layerObj.id, layerObj);
   }
 
-  // Step 5: Fallback if BBLAYERS is empty or all paths unresolvable
-  if (parsedLayers.filter(l => !l.isMissing).length === 0) {
+  // Fallback Discovery Mode: triggers automatically when no bblayers.conf is found
+  if (isFallbackMode || parsedLayers.filter(l => !l.isMissing).length === 0) {
     onProgress?.({
       phase: 'parsing_layers',
-      message: 'Running fallback layer scan: searching for conf/layer.conf in folder tree...'
+      message: 'No bblayers.conf found — discovering layers by scanning directory for layer.conf files...'
     });
 
     const allLayerConfs = await searchAllFilesRecursively(rootDirHandle, 'layer.conf', 5);
-    const validConfs = allLayerConfs.filter(item => item.path.endsWith('/conf/layer.conf') || item.path === 'conf/layer.conf');
+    const validConfs = allLayerConfs.filter(item => 
+      item.path.endsWith('/conf/layer.conf') || 
+      item.path === 'conf/layer.conf' ||
+      item.path.endsWith('layer.conf')
+    );
 
     for (const item of validConfs) {
       const pathSegments = item.path.split('/');
       const confIdx = pathSegments.lastIndexOf('conf');
-      const layerRelPath = confIdx > 0 ? pathSegments.slice(0, confIdx).join('/') : rootDirHandle.name;
-      const layerDirHandle = confIdx > 0 ? allDirMap.get(layerRelPath) || rootDirHandle : rootDirHandle;
-      const folderName = confIdx > 0 ? pathSegments[confIdx - 1] : rootDirHandle.name;
-
-      if (!layerDirHandle) continue;
+      const layerRelPath = confIdx > 0 
+        ? pathSegments.slice(0, confIdx).join('/') 
+        : (pathSegments.length > 1 ? pathSegments.slice(0, -1).join('/') : rootDirHandle.name);
+      
+      const folderName = layerRelPath.includes('/') 
+        ? layerRelPath.split('/').pop()! 
+        : (layerRelPath || rootDirHandle.name);
+        
+      const layerDirHandle = (layerRelPath && allDirMap.get(layerRelPath)) 
+        ? allDirMap.get(layerRelPath)! 
+        : item.parentDir;
 
       const layerContent = await scanLayerContent(layerDirHandle, folderName, layerRelPath);
       let layerConfData: ReturnType<typeof parseLayerConf> = {
@@ -547,6 +562,12 @@ export async function scanYoctoDirectory(
         collectionToLayerMap.set(fallbackLayer.id, fallbackLayer);
       }
     }
+  }
+
+  if (parsedLayers.length === 0) {
+    throw new Error(
+      "No layers found — could not find bblayers.conf or any layer.conf files in the selected directory."
+    );
   }
 
   // 4. Identify ghost dependencies (dependencies in LAYERDEPENDS not in BBLAYERS)
@@ -614,11 +635,12 @@ export async function scanYoctoDirectory(
 
   return {
     folderName: rootDirHandle.name,
-    bblayersPath: bblayersResult ? bblayersResult.resolvedPath : 'bblayers.conf (scanned layers folder)',
+    discoveryMode,
+    bblayersPath: bblayersResult ? bblayersResult.resolvedPath : 'None (Auto-discovered)',
     localConfPath: localConfResult ? localConfResult.resolvedPath : 'local.conf (not found)',
     oeRoot,
-    machine: localConfig.machine,
-    distro: localConfig.distro,
+    machine: isFallbackMode ? 'unknown' : (localConfig.machine || 'unknown'),
+    distro: isFallbackMode ? 'unknown' : (localConfig.distro || 'unknown'),
     imageInstall: localConfig.imageInstall,
     distroFeatures: localConfig.distroFeatures,
     imageFeatures: localConfig.imageFeatures,

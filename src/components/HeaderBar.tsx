@@ -19,6 +19,8 @@ interface HeaderBarProps {
   onTabChange: (tab: 'graph' | 'conflicts') => void;
   conflictCount: number;
   criticalCount: number;
+  layoutMode: 'tree' | 'force';
+  onLayoutModeChange: (mode: 'tree' | 'force') => void;
   onOpenFolder: () => void;
   onFitGraph: () => void;
   onExportPng: () => void;
@@ -33,6 +35,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onTabChange,
   conflictCount,
   criticalCount,
+  layoutMode,
+  onLayoutModeChange,
   onOpenFolder,
   onFitGraph,
   onExportPng,
@@ -141,6 +145,36 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           <Sparkles className="w-3.5 h-3.5 text-amber-400" />
           <span>Demo Data</span>
         </button>
+
+        {/* Layout Toggle (Tree / Force) */}
+        {config && activeTab === 'graph' && (
+          <div className="flex items-center bg-[#0d1117] border border-gray-700 rounded p-0.5" id="layout-toggle-group">
+            <button
+              id="layout-tree-btn"
+              onClick={() => onLayoutModeChange('tree')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition ${
+                layoutMode === 'tree'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+              title="Hierarchical Top-Down Tree Layout"
+            >
+              <span>⊞ Tree</span>
+            </button>
+            <button
+              id="layout-force-btn"
+              onClick={() => onLayoutModeChange('force')}
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition ${
+                layoutMode === 'force'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+              title="Force-Directed Physical Layout"
+            >
+              <span>⊙ Force</span>
+            </button>
+          </div>
+        )}
 
         {/* Fit Graph (only on graph tab) */}
         {config && activeTab === 'graph' && (

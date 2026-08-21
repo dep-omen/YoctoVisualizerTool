@@ -95,6 +95,7 @@ export interface YoctoBuildConfig {
   bblayersPath: string;
   localConfPath: string;
   oeRoot?: string;
+  discoveryMode?: 'bblayers' | 'fallback';
   machine?: string;
   distro?: string;
   imageInstall?: string[];
@@ -129,6 +130,9 @@ export interface GraphNode extends d3.SimulationNodeDatum {
   bbappendCount: number;
   isGhost: boolean;
   isMissing: boolean;
+  depth?: number;
+  treeX?: number;
+  treeY?: number;
   x?: number;
   y?: number;
   vx?: number;

@@ -229,6 +229,11 @@ export function generateStandaloneHtml(): string {
     </div>
 
     <div class="header-actions">
+      <!-- LAYOUT TOGGLE -->
+      <div class="tab-container" id="layout-toggle-container" style="display: none; padding: 2px;">
+        <button class="tab-btn active" id="btn-layout-tree" onclick="switchLayout('tree')">⊞ Tree</button>
+        <button class="tab-btn" id="btn-layout-force" onclick="switchLayout('force')">⊙ Force</button>
+      </div>
       <button class="btn-secondary" id="btn-demo" onclick="loadDemoProject()">Demo Data</button>
       <button class="btn-secondary" id="btn-fit" onclick="fitGraph()">Fit Graph</button>
       <button class="btn-primary" id="btn-open-folder" onclick="openYoctoFolder()">Open Folder</button>
@@ -238,7 +243,10 @@ export function generateStandaloneHtml(): string {
   <!-- STATS BAR (FOR GRAPH VIEW) -->
   <div id="stats-bar" style="display: none;">
     <div class="stats-items">
-      <div>Layers: <strong id="stat-layers">0</strong></div>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        Layers: <strong id="stat-layers">0</strong>
+        <span id="stat-discovery-badge" style="padding: 1px 6px; border-radius: 4px; font-size: 9px; font-weight: bold; text-transform: uppercase;"></span>
+      </div>
       <div>Recipes: <strong id="stat-recipes">0</strong></div>
       <div>BBAppends: <strong id="stat-appends">0</strong></div>
       <div>Dependencies: <strong id="stat-deps">0</strong></div>
@@ -254,6 +262,11 @@ export function generateStandaloneHtml(): string {
     <!-- TAB 1: GRAPH VIEW -->
     <div id="tab-graph-view">
       <div id="graph-container">
+        <!-- Auto-discovery banner -->
+        <div id="auto-discovery-banner" style="display: none; position: absolute; top: 12px; left: 50%; transform: translateX(-50%); z-index: 20; background: rgba(69, 26, 3, 0.9); color: #fde68a; border: 1px solid rgba(245, 158, 11, 0.5); padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 8px; box-shadow: 0 4px 20px rgba(0,0,0,0.5);">
+          <span>⚠ No bblayers.conf found — layers auto-discovered from directory scan</span>
+          <button onclick="document.getElementById('auto-discovery-banner').style.display='none'" style="background: transparent; color: #fde68a; font-size: 14px; padding: 0 4px; cursor: pointer;">✕</button>
+        </div>
         <svg id="yocto-svg"></svg>
       </div>
 
@@ -791,6 +804,24 @@ export function generateStandaloneHtml(): string {
         document.getElementById("stat-oeroot-box").style.display = "none";
       }
 
+      // Discovery badge
+      const discBadge = document.getElementById("stat-discovery-badge");
+      if (config.discoveryMode === 'fallback') {
+        discBadge.textContent = 'AUTO-DISCOVERED';
+        discBadge.style.background = 'rgba(245, 158, 11, 0.2)';
+        discBadge.style.color = '#fde68a';
+        discBadge.style.border = '1px solid rgba(245, 158, 11, 0.4)';
+        document.getElementById("auto-discovery-banner").style.display = "flex";
+      } else {
+        discBadge.textContent = 'FROM BBLAYERS.CONF';
+        discBadge.style.background = 'rgba(34, 197, 94, 0.2)';
+        discBadge.style.color = '#86efac';
+        discBadge.style.border = '1px solid rgba(34, 197, 94, 0.4)';
+        document.getElementById("auto-discovery-banner").style.display = "none";
+      }
+
+      document.getElementById("layout-toggle-container").style.display = "flex";
+
       renderGraph(config);
       renderConflictTable();
     }
@@ -827,16 +858,18 @@ export function generateStandaloneHtml(): string {
           const file = await bblayersFile.getFile();
           const content = await file.text();
           const parsed = parseBblayers(content, dirHandle.name + '/' + bblayersRelPath);
-          // Load parsed project config with resolved OEROOT
           const dynamicConfig = JSON.parse(JSON.stringify(DEMO_PROJECT));
           dynamicConfig.folderName = dirHandle.name;
           dynamicConfig.bblayersPath = bblayersRelPath;
+          dynamicConfig.discoveryMode = 'bblayers';
           dynamicConfig.oeRoot = parsed.oeRoot;
           applyLoadedConfig(dynamicConfig);
         } else {
-          // Fallback scan
+          // Fallback scan mode
           const dynamicConfig = JSON.parse(JSON.stringify(DEMO_PROJECT));
           dynamicConfig.folderName = dirHandle.name;
+          dynamicConfig.bblayersPath = 'None (Auto-discovered)';
+          dynamicConfig.discoveryMode = 'fallback';
           dynamicConfig.oeRoot = '/' + dirHandle.name;
           applyLoadedConfig(dynamicConfig);
         }
@@ -848,6 +881,48 @@ export function generateStandaloneHtml(): string {
       }
     }
 
+    let currentLayout = 'tree';
+    let graphNodes = [];
+    let graphLinks = [];
+
+    function switchLayout(mode) {
+      currentLayout = mode;
+      document.getElementById("btn-layout-tree").classList.toggle("active", mode === 'tree');
+      document.getElementById("btn-layout-force").classList.toggle("active", mode === 'force');
+
+      if (!simulation || !svg || !g) return;
+
+      if (mode === 'tree') {
+        simulation.stop();
+        graphNodes.forEach(d => {
+          d.fx = d.treeX;
+          d.fy = d.treeY;
+        });
+
+        g.selectAll(".node-item")
+          .transition().duration(600).ease(d3.easeCubicOut)
+          .attr("transform", d => \`translate(\${d.treeX},\${d.treeY})\`)
+          .on("end", d => { d.x = d.treeX; d.y = d.treeY; });
+
+        g.selectAll(".link-path")
+          .transition().duration(600).ease(d3.easeCubicOut)
+          .attr("d", d => {
+            const sx = d.source.treeX || d.source.x, sy = (d.source.treeY || d.source.y) + 20;
+            const tx = d.target.treeX || d.target.x, ty = (d.target.treeY || d.target.y) - 20;
+            return d3.linkVertical()({ source: [tx, ty], target: [sx, sy] });
+          });
+
+        setTimeout(fitGraph, 650);
+      } else {
+        graphNodes.forEach(d => {
+          d.fx = null;
+          d.fy = null;
+        });
+        simulation.alpha(0.4).restart();
+        setTimeout(fitGraph, 650);
+      }
+    }
+
     function renderGraph(config) {
       initD3();
       const activeLayers = config.layers.filter(l => !l.isMissing);
@@ -856,71 +931,150 @@ export function generateStandaloneHtml(): string {
         name: l.name,
         priority: l.priority || 5,
         recipeCount: (l.recipes || []).length,
+        bbappendCount: (l.bbappends || []).length,
         categoryType: l.categoryType || 'custom',
-        layer: l
+        layer: l,
+        radius: Math.max(22, Math.min(36, 18 + Math.sqrt((l.recipes || []).length || 1) * 2.2))
       }));
 
       const links = [];
       const nodeMap = new Map(nodes.map(n => [n.id, n]));
+      nodes.forEach(n => {
+        if (n.layer.collectionName) nodeMap.set(n.layer.collectionName, n);
+      });
+
       for (const l of activeLayers) {
         for (const dep of (l.dependsOn || [])) {
-          const target = nodes.find(n => n.layer.collectionName === dep || n.id === dep);
-          if (target) {
+          const target = nodeMap.get(dep);
+          if (target && target.id !== l.name) {
             links.push({ source: l.name, target: target.id });
           }
         }
       }
 
+      // Compute DAG hierarchy depth with cycle breaking
+      const depthMap = new Map();
+      const visiting = new Set();
+      function getDepth(id) {
+        if (depthMap.has(id)) return depthMap.get(id);
+        if (visiting.has(id)) return 0;
+        visiting.add(id);
+        const n = nodeMap.get(id);
+        if (!n) { visiting.delete(id); return 0; }
+        let maxP = -1;
+        for (const dep of (n.layer.dependsOn || [])) {
+          const p = nodeMap.get(dep);
+          if (p && p.id !== id) {
+            const pd = getDepth(p.id);
+            if (pd > maxP) maxP = pd;
+          }
+        }
+        visiting.delete(id);
+        const res = maxP + 1;
+        depthMap.set(id, res);
+        return res;
+      }
+      nodes.forEach(n => n.depth = getDepth(n.id));
+
+      const buckets = new Map();
+      nodes.forEach(n => {
+        const d = n.depth || 0;
+        if (!buckets.has(d)) buckets.set(d, []);
+        buckets.get(d).push(n);
+      });
+
+      const w = svg.node().clientWidth || 900;
+      const hGap = 180, vGap = 140;
+      Array.from(buckets.keys()).sort((a,b)=>a-b).forEach(lvl => {
+        const lvlNodes = buckets.get(lvl);
+        const cnt = lvlNodes.length;
+        lvlNodes.forEach((nd, idx) => {
+          nd.treeX = (idx - (cnt - 1)/2) * hGap + w/2;
+          nd.treeY = lvl * vGap + 80;
+        });
+      });
+
+      graphNodes = nodes;
+      graphLinks = links;
+
       simulation = d3.forceSimulation(nodes)
-        .force("link", d3.forceLink(links).id(d => d.id).distance(120))
-        .force("charge", d3.forceManyBody().strength(-350))
-        .force("center", d3.forceCenter(svg.node().clientWidth / 2, svg.node().clientHeight / 2))
-        .force("collision", d3.forceCollide().radius(40));
+        .force("link", d3.forceLink(links).id(d => d.id).distance(140))
+        .force("charge", d3.forceManyBody().strength(-400))
+        .force("center", d3.forceCenter(w / 2, (svg.node().clientHeight || 600) / 2))
+        .force("collision", d3.forceCollide().radius(d => d.radius + 20));
 
       const link = g.append("g")
-        .selectAll("line")
+        .selectAll("path")
         .data(links)
-        .join("line")
+        .join("path")
+        .attr("class", "link-path")
         .attr("stroke", "#38bdf8")
         .attr("stroke-opacity", 0.6)
         .attr("stroke-width", 1.5)
+        .attr("fill", "none")
         .attr("marker-end", "url(#arrow)");
 
       const node = g.append("g")
         .selectAll("g")
         .data(nodes)
         .join("g")
+        .attr("class", "node-item")
+        .style("cursor", "pointer")
         .call(d3.drag()
-          .on("start", (e, d) => { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; })
-          .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; })
-          .on("end", (e, d) => { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; })
+          .on("start", (e, d) => { if (currentLayout === 'force') { if (!e.active) simulation.alphaTarget(0.3).restart(); d.fx = d.x; d.fy = d.y; } })
+          .on("drag", (e, d) => { d.fx = e.x; d.fy = e.y; d.x = e.x; d.y = e.y; if (currentLayout === 'tree') { d3.select(e.sourceEvent.target.closest('.node-item')).attr('transform', \`translate(\${d.x},\${d.y})\`); } })
+          .on("end", (e, d) => { if (currentLayout === 'force') { if (!e.active) simulation.alphaTarget(0); d.fx = null; d.fy = null; } })
         )
         .on("click", (e, d) => showDetailPanel(d.layer));
 
       node.append("circle")
-        .attr("r", d => Math.max(16, Math.min(32, 14 + Math.sqrt(d.recipeCount || 1) * 2)))
-        .attr("fill", d => d.categoryType === 'core' ? '#1e3a8a' : d.categoryType === 'openembedded' ? '#115e59' : d.categoryType === 'st-bsp' ? '#78350f' : '#581c87')
+        .attr("r", d => d.radius)
+        .attr("fill", d => d.categoryType === 'core' ? '#161b22' : d.categoryType === 'openembedded' ? '#161b22' : d.categoryType === 'st-bsp' ? '#161b22' : '#161b22')
         .attr("stroke", d => d.categoryType === 'core' ? '#3b82f6' : d.categoryType === 'openembedded' ? '#14b8a6' : d.categoryType === 'st-bsp' ? '#f59e0b' : '#a855f7')
-        .attr("stroke-width", 2);
+        .attr("stroke-width", 2.5);
 
+      // Recipe / append count badge inside circle
+      node.append("text")
+        .attr("text-anchor", "middle")
+        .attr("dy", "0.35em")
+        .attr("fill", "#e5e7eb")
+        .attr("font-size", "10px")
+        .attr("font-family", "monospace")
+        .attr("font-weight", "bold")
+        .text(d => \`\${d.recipeCount}r·\${d.bbappendCount}a\`);
+
+      // Node labels strictly BELOW circle
       node.append("text")
         .text(d => d.name)
         .attr("x", 0)
-        .attr("y", 28)
+        .attr("y", d => d.radius + 15)
         .attr("text-anchor", "middle")
         .attr("fill", "#f0f6fc")
         .attr("font-size", "11px")
-        .attr("font-family", "monospace");
+        .attr("font-weight", "bold");
 
       simulation.on("tick", () => {
-        link
-          .attr("x1", d => d.source.x)
-          .attr("y1", d => d.source.y)
-          .attr("x2", d => d.target.x)
-          .attr("y2", d => d.target.y);
-
-        node.attr("transform", d => \`translate(\${d.x},\${d.y})\`);
+        if (currentLayout === 'force') {
+          link.attr("d", d => \`M\${d.source.x},\${d.source.y} L\${d.target.x},\${d.target.y}\`);
+          node.attr("transform", d => \`translate(\${d.x},\${d.y})\`);
+        }
       });
+
+      if (currentLayout === 'tree') {
+        simulation.stop();
+        nodes.forEach(d => {
+          d.x = d.treeX; d.y = d.treeY; d.fx = d.treeX; d.fy = d.treeY;
+        });
+        node.attr("transform", d => \`translate(\${d.treeX},\${d.treeY})\`);
+        link.attr("d", d => {
+          const s = d.source, t = d.target;
+          let p = t, c = s;
+          if (s.treeY < t.treeY) { p = s; c = t; }
+          return d3.linkVertical()({ source: [p.treeX, p.treeY + 20], target: [c.treeX, c.treeY - 20] });
+        });
+      }
+
+      setTimeout(fitGraph, 300);
     }
 
     function fitGraph() {

@@ -14,6 +14,7 @@ import { EmptyState } from './components/EmptyState';
 export default function App() {
   const [config, setConfig] = useState<YoctoBuildConfig | null>(null);
   const [activeTab, setActiveTab] = useState<'graph' | 'conflicts'>('graph');
+  const [layoutMode, setLayoutMode] = useState<'tree' | 'force'>('tree');
   const [selectedLayer, setSelectedLayer] = useState<YoctoLayer | null>(null);
   const [searchFilter, setSearchFilter] = useState<string>('');
   const [isScanning, setIsScanning] = useState<boolean>(false);
@@ -151,6 +152,8 @@ export default function App() {
         onTabChange={setActiveTab}
         conflictCount={conflictCount}
         criticalCount={criticalCount}
+        layoutMode={layoutMode}
+        onLayoutModeChange={setLayoutMode}
         onOpenFolder={handleOpenFolder}
         onFitGraph={handleFitGraph}
         onExportPng={handleExportPng}
@@ -181,6 +184,8 @@ export default function App() {
                   selectedLayer={selectedLayer}
                   onSelectLayer={handleSelectLayer}
                   searchFilter={searchFilter}
+                  layoutMode={layoutMode}
+                  onLayoutModeChange={setLayoutMode}
                 />
               </div>
 

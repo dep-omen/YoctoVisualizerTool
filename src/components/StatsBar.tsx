@@ -23,7 +23,7 @@ export const StatsBar: React.FC<StatsBarProps> = ({
       {/* Stats indicators matching design specification */}
       <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto custom-scrollbar whitespace-nowrap">
         {/* Layers */}
-        <div className="flex items-center gap-1.5" title="Total active layers configured in BBLAYERS">
+        <div className="flex items-center gap-1.5" title="Total active layers configured">
           <span className="text-blue-500 text-xs">●</span>
           <span>Layers:</span>
           <span className="text-white font-mono font-semibold">
@@ -39,6 +39,15 @@ export const StatsBar: React.FC<StatsBarProps> = ({
               </span>
             )}
           </span>
+          {config.discoveryMode === 'fallback' ? (
+            <span id="mode-badge-auto" className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-tight bg-amber-500/20 text-amber-300 border border-amber-500/40">
+              AUTO-DISCOVERED
+            </span>
+          ) : (
+            <span id="mode-badge-bblayers" className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-tight bg-green-500/20 text-green-300 border border-green-500/40">
+              FROM BBLAYERS.CONF
+            </span>
+          )}
         </div>
 
         {/* Recipes */}
