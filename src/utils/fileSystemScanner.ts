@@ -450,10 +450,13 @@ export async function scanYoctoDirectory(
       const layerContent = await scanLayerContent(dirRes.handle, fallbackName, dirRes.relativePath);
       let layerConfData: ReturnType<typeof parseLayerConf> = {
         collectionName: fallbackName,
+        collections: [fallbackName],
         dependsOn: [],
+        dynamicDepends: [],
         recommends: [],
         priority: undefined,
         seriesCompat: [],
+        pattern: undefined,
         raw: ''
       };
 
@@ -461,17 +464,23 @@ export async function scanYoctoDirectory(
         layerConfData = parseLayerConf(layerContent.layerConfContent, fallbackName);
       }
 
-      const catType = determineLayerCategory(fallbackName, layerConfData.collectionName);
+      // Step 1 & 5: Determine display name and canonical ID
+      // Preferred: first value from BBFILE_COLLECTIONS (canonical name)
+      // Fallback: directory name (never 'conf')
+      const canonicalName = layerConfData.collectionName || fallbackName;
+      const catType = determineLayerCategory(fallbackName, canonicalName);
 
       const layerObj: YoctoLayer = {
-        id: layerConfData.collectionName || fallbackName,
-        collectionName: layerConfData.collectionName || fallbackName,
-        name: fallbackName,
+        id: canonicalName,
+        collectionName: canonicalName,
+        collections: layerConfData.collections,
+        name: canonicalName,
         path: rawPath,
         absolutePath: dirRes.relativePath,
         priority: layerConfData.priority,
         seriesCompat: layerConfData.seriesCompat,
         dependsOn: layerConfData.dependsOn,
+        dynamicDepends: layerConfData.dynamicDepends,
         recommends: layerConfData.recommends,
         recipes: layerContent.recipes,
         bbappends: layerContent.bbappends,
@@ -487,6 +496,12 @@ export async function scanYoctoDirectory(
       collectionToLayerMap.set(layerObj.collectionName, layerObj);
       collectionToLayerMap.set(layerObj.name, layerObj);
       collectionToLayerMap.set(layerObj.id, layerObj);
+      collectionToLayerMap.set(fallbackName, layerObj);
+      if (layerConfData.collections) {
+        for (const col of layerConfData.collections) {
+          collectionToLayerMap.set(col, layerObj);
+        }
+      }
     }
   }
 
@@ -511,9 +526,14 @@ export async function scanYoctoDirectory(
         ? pathSegments.slice(0, confIdx).join('/') 
         : (pathSegments.length > 1 ? pathSegments.slice(0, -1).join('/') : rootDirHandle.name);
       
-      const folderName = layerRelPath.includes('/') 
+      let folderName = layerRelPath.includes('/') 
         ? layerRelPath.split('/').pop()! 
         : (layerRelPath || rootDirHandle.name);
+      
+      if (folderName.toLowerCase() === 'conf') {
+        const parts = layerRelPath.split('/').filter(Boolean);
+        folderName = parts.length > 1 ? parts[parts.length - 2] : rootDirHandle.name;
+      }
         
       const layerDirHandle = (layerRelPath && allDirMap.get(layerRelPath)) 
         ? allDirMap.get(layerRelPath)! 
@@ -522,10 +542,13 @@ export async function scanYoctoDirectory(
       const layerContent = await scanLayerContent(layerDirHandle, folderName, layerRelPath);
       let layerConfData: ReturnType<typeof parseLayerConf> = {
         collectionName: folderName,
+        collections: [folderName],
         dependsOn: [],
+        dynamicDepends: [],
         recommends: [],
         priority: undefined,
         seriesCompat: [],
+        pattern: undefined,
         raw: ''
       };
 
@@ -533,17 +556,20 @@ export async function scanYoctoDirectory(
         layerConfData = parseLayerConf(layerContent.layerConfContent, folderName);
       }
 
-      const catType = determineLayerCategory(folderName, layerConfData.collectionName);
+      const canonicalName = layerConfData.collectionName || folderName;
+      const catType = determineLayerCategory(folderName, canonicalName);
 
       const fallbackLayer: YoctoLayer = {
-        id: layerConfData.collectionName || folderName,
-        collectionName: layerConfData.collectionName || folderName,
-        name: folderName,
+        id: canonicalName,
+        collectionName: canonicalName,
+        collections: layerConfData.collections,
+        name: canonicalName,
         path: `${oeRoot}/${layerRelPath}`,
         absolutePath: layerRelPath,
         priority: layerConfData.priority,
         seriesCompat: layerConfData.seriesCompat,
         dependsOn: layerConfData.dependsOn,
+        dynamicDepends: layerConfData.dynamicDepends,
         recommends: layerConfData.recommends,
         recipes: layerContent.recipes,
         bbappends: layerContent.bbappends,
@@ -560,6 +586,12 @@ export async function scanYoctoDirectory(
         collectionToLayerMap.set(fallbackLayer.collectionName, fallbackLayer);
         collectionToLayerMap.set(fallbackLayer.name, fallbackLayer);
         collectionToLayerMap.set(fallbackLayer.id, fallbackLayer);
+        collectionToLayerMap.set(folderName, fallbackLayer);
+        if (layerConfData.collections) {
+          for (const col of layerConfData.collections) {
+            collectionToLayerMap.set(col, fallbackLayer);
+          }
+        }
       }
     }
   }
@@ -618,14 +650,17 @@ export async function scanYoctoDirectory(
     }
   }
 
-  // Find most frequent release compat tag (e.g. "scarthgap", "kirkstone", "nanbield", "mickledore")
-  let primaryRelease = 'Unknown';
+  // Find most frequent release compat tag (e.g. "scarthgap", "kirkstone", "nanbield", "mickledore", "wrynose")
+  let primaryRelease: string | undefined = undefined;
   let maxCount = 0;
   for (const [rel, count] of Object.entries(releaseCountMap)) {
     if (count > maxCount) {
       maxCount = count;
       primaryRelease = rel;
     }
+  }
+  if (!primaryRelease && Object.keys(releaseCountMap).length > 0) {
+    primaryRelease = Object.keys(releaseCountMap)[0];
   }
 
   onProgress?.({
@@ -649,7 +684,7 @@ export async function scanYoctoDirectory(
     bbNumberThreads: localConfig.bbNumberThreads,
     layers: allLayers,
     unmetDependencies: Array.from(unmetDependenciesSet),
-    activeYoctoRelease: primaryRelease !== 'Unknown' ? primaryRelease : undefined,
+    activeYoctoRelease: primaryRelease || 'Custom',
     stats: {
       totalLayers: allLayers.length,
       activeLayers: parsedLayers.filter(l => !l.isMissing).length,
@@ -658,7 +693,7 @@ export async function scanYoctoDirectory(
       totalRecipes,
       totalBbappends,
       totalDependencies: totalDeps,
-      primaryRelease
+      primaryRelease: primaryRelease || 'Custom'
     }
   };
 }

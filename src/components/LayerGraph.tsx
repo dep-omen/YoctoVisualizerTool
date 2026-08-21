@@ -247,9 +247,11 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
         .attr('fill', color);
     };
 
-    createMarker('arrow-default', '#30363d');
+    createMarker('arrow-default', '#4b5563');
     createMarker('arrow-highlight', '#38bdf8');
     createMarker('arrow-ghost', '#ef4444');
+    createMarker('arrow-dynamic', '#06b6d4');
+    createMarker('arrow-dynamic-highlight', '#22d3ee');
 
     // Glow filter
     const filter = defs.append('filter')
@@ -305,19 +307,43 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
       nodeLookup.set(n.id, n);
       nodeLookup.set(n.collectionName, n);
       nodeLookup.set(n.name, n);
+      if (n.layer.collections) {
+        n.layer.collections.forEach(col => nodeLookup.set(col, n));
+      }
     });
 
-    // Build links from LAYERDEPENDS
+    // Build links from LAYERDEPENDS (solid) and BBFILES_DYNAMIC (dashed cyan)
     const links: GraphLink[] = [];
     config.layers.forEach(layer => {
+      // Hard dependencies
       layer.dependsOn.forEach(depName => {
         const targetNode = nodeLookup.get(depName);
         if (targetNode && targetNode.id !== layer.id) {
           links.push({
             source: layer.id,
             target: targetNode.id,
-            isGhostLink: targetNode.isGhost || targetNode.isMissing
+            isGhostLink: targetNode.isGhost || targetNode.isMissing,
+            isDynamicLink: false
           });
+        }
+      });
+
+      // Dynamic extensions
+      (layer.dynamicDepends || []).forEach(dynName => {
+        const targetNode = nodeLookup.get(dynName);
+        if (targetNode && targetNode.id !== layer.id) {
+          const alreadyLinked = links.some(
+            l => (l.source === layer.id || (l.source as GraphNode).id === layer.id) &&
+                 (l.target === targetNode.id || (l.target as GraphNode).id === targetNode.id)
+          );
+          if (!alreadyLinked) {
+            links.push({
+              source: layer.id,
+              target: targetNode.id,
+              isGhostLink: false,
+              isDynamicLink: true
+            });
+          }
         }
       });
     });
@@ -404,10 +430,10 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
       .join('path')
       .attr('class', 'link-line')
       .attr('fill', 'none')
-      .attr('stroke', d => d.isGhostLink ? '#ef4444' : '#30363d')
-      .attr('stroke-width', 1.5)
-      .attr('stroke-dasharray', d => d.isGhostLink ? '4,4' : 'none')
-      .attr('marker-end', d => d.isGhostLink ? 'url(#arrow-ghost)' : 'url(#arrow-default)');
+      .attr('stroke', d => d.isGhostLink ? '#ef4444' : d.isDynamicLink ? '#06b6d4' : '#4b5563')
+      .attr('stroke-width', d => d.isDynamicLink ? 1.8 : 2)
+      .attr('stroke-dasharray', d => (d.isGhostLink || d.isDynamicLink) ? '4,4' : 'none')
+      .attr('marker-end', d => d.isGhostLink ? 'url(#arrow-ghost)' : d.isDynamicLink ? 'url(#arrow-dynamic)' : 'url(#arrow-default)');
 
     // Draw Nodes Container
     const nodeGroup = g.append('g').attr('class', 'nodes');
@@ -734,22 +760,25 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
 
         if (isHighlighted) {
           linkEl
-            .attr('stroke', '#38bdf8')
-            .attr('stroke-width', 3)
+            .attr('stroke', d.isDynamicLink ? '#22d3ee' : '#38bdf8')
+            .attr('stroke-width', d.isDynamicLink ? 2.5 : 3)
+            .attr('stroke-dasharray', (d.isGhostLink || d.isDynamicLink) ? '4,4' : 'none')
             .attr('opacity', 1)
-            .attr('marker-end', 'url(#arrow-highlight)');
+            .attr('marker-end', d.isDynamicLink ? 'url(#arrow-dynamic-highlight)' : 'url(#arrow-highlight)');
         } else if (activeId) {
           linkEl
             .attr('stroke', '#374151')
             .attr('stroke-width', 1.5)
+            .attr('stroke-dasharray', (d.isGhostLink || d.isDynamicLink) ? '4,4' : 'none')
             .attr('opacity', 0.15)
             .attr('marker-end', 'url(#arrow-default)');
         } else {
           linkEl
-            .attr('stroke', d.isGhostLink ? '#ef4444' : '#4b5563')
-            .attr('stroke-width', 2)
-            .attr('opacity', 0.7)
-            .attr('marker-end', d.isGhostLink ? 'url(#arrow-ghost)' : 'url(#arrow-default)');
+            .attr('stroke', d.isGhostLink ? '#ef4444' : d.isDynamicLink ? '#06b6d4' : '#4b5563')
+            .attr('stroke-width', d.isDynamicLink ? 1.8 : 2)
+            .attr('stroke-dasharray', (d.isGhostLink || d.isDynamicLink) ? '4,4' : 'none')
+            .attr('opacity', d.isDynamicLink ? 0.85 : 0.7)
+            .attr('marker-end', d.isGhostLink ? 'url(#arrow-ghost)' : d.isDynamicLink ? 'url(#arrow-dynamic)' : 'url(#arrow-default)');
         }
       });
 
@@ -808,6 +837,9 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
         </span>
         <span className="flex items-center gap-1.5 font-medium tracking-wide text-red-400">
           <span className="w-2.5 h-2.5 bg-red-500 rounded-full inline-block border border-dashed border-red-300" /> UNMET / GHOST
+        </span>
+        <span className="flex items-center gap-1.5 font-medium tracking-wide text-cyan-400 border-l border-gray-800 pl-3">
+          <span className="w-4 h-0 border-t-2 border-dashed border-cyan-400 inline-block" /> DYNAMIC EXTENSION
         </span>
         <span className="hidden md:flex items-center gap-1.5 text-gray-500 border-l border-gray-800 pl-3">
           <span>Badge: <strong className="text-gray-300 font-mono">r</strong>=recipes, <strong className="text-amber-400 font-mono">a</strong>=bbappends</span>

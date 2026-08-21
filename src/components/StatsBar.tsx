@@ -1,6 +1,7 @@
 import React from 'react';
 import { YoctoBuildConfig } from '../types';
 import { Search } from 'lucide-react';
+import { isStandardKnownRelease } from '../utils/yoctoParser';
 
 interface StatsBarProps {
   config: YoctoBuildConfig;
@@ -80,8 +81,14 @@ export const StatsBar: React.FC<StatsBarProps> = ({
         {/* Release Pill */}
         <div className="hidden lg:flex items-center gap-1.5" title="Detected Yocto Project Release Compatibility">
           <span className="text-gray-500">RELEASE:</span>
-          <span className="text-white font-mono font-semibold">
+          <span className="text-white font-mono font-semibold flex items-center gap-1">
             {stats.primaryRelease || config.activeYoctoRelease || 'Custom'}
+            {(stats.primaryRelease || config.activeYoctoRelease) &&
+              !isStandardKnownRelease(stats.primaryRelease || config.activeYoctoRelease || '') && (
+                <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-900/40 text-purple-300 border border-purple-500/30 normal-case tracking-normal">
+                  (unreleased/future)
+                </span>
+              )}
           </span>
         </div>
 

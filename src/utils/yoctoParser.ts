@@ -285,11 +285,64 @@ export function parseBblayersConf(
 }
 
 /**
+ * Known Yocto standard releases for release status badge
+ */
+export const KNOWN_YOCTO_RELEASES = new Set([
+  'dunfell',
+  'kirkstone',
+  'mickledore',
+  'nanbield',
+  'scarthgap',
+  'styhead',
+  'walnascar',
+  'whitleydale',
+  'langdale',
+  'honister',
+  'hardknott',
+  'gatesgarth',
+  'zeus',
+  'warrior',
+  'thud',
+  'sumo',
+  'rocko',
+  'pyro',
+  'morty',
+  'krogoth'
+]);
+
+export function isStandardKnownRelease(codename: string): boolean {
+  if (!codename) return false;
+  return KNOWN_YOCTO_RELEASES.has(codename.toLowerCase().trim());
+}
+
+/**
+ * Resolve a safe fallback layer name from path or folder name.
+ * Never use 'conf' as a layer name.
+ */
+export function resolveLayerFallbackName(rawNameOrPath: string): string {
+  const clean = rawNameOrPath.replace(/\\/g, '/').trim().replace(/\/+$/, '');
+  const parts = clean.split('/').filter(Boolean);
+  if (parts.length === 0) return 'layer';
+
+  let name = parts[parts.length - 1];
+  if (name.toLowerCase() === 'conf') {
+    if (parts.length > 1) {
+      name = parts[parts.length - 2];
+      console.warn(`Layer name resolved to 'conf' from path '${rawNameOrPath}'. Using parent directory name '${name}' instead.`);
+    } else {
+      name = 'layer';
+      console.warn(`Layer name resolved to 'conf'. Falling back to 'layer'.`);
+    }
+  }
+  return name;
+}
+
+/**
  * Extract a variable value from BitBake lines
  */
 export function extractBitbakeVar(lines: string[], varName: string): string | null {
-  // Regex to match VAR =, VAR ?=, VAR ??=, VAR +=, VAR_append =, VAR:append =, etc.
-  const regex = new RegExp(`^${varName}(?:_[a-zA-Z0-9_-]+|:[a-zA-Z0-9_-]+)?\\s*(?:\\?\\?=|\\?=|\\+=|=\\+|:=|=)\\s*(.*)$`);
+  const escaped = varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`^${escaped}(?:_[a-zA-Z0-9_-]+|:[a-zA-Z0-9_-]+)?\\s*(?:\\?\\?=|\\?=|\\+=|=\\+|:=|=|\.=|/=\\s*)\\s*(.*)$`);
   
   for (const line of lines) {
     const match = line.match(regex);
@@ -306,11 +359,12 @@ export function extractBitbakeVar(lines: string[], varName: string): string | nu
 }
 
 /**
- * Extract a list/array of items from BitBake variable (e.g. BBLAYERS, DISTRO_FEATURES)
+ * Extract a list/array of items from BitBake variable (e.g. BBLAYERS, BBFILE_COLLECTIONS, LAYERDEPENDS)
+ * Merges multiple occurrences with +=, =+, .=, :=, =
  */
 export function extractBitbakeList(lines: string[], varName: string): string[] {
-  // Can be defined across multiple occurrences with += or =
-  const regex = new RegExp(`^${varName}(?:_[a-zA-Z0-9_-]+|:[a-zA-Z0-9_-]+)?\\s*(?:\\?\\?=|\\?=|\\+=|=\\+|:=|=)\\s*(.*)$`);
+  const escaped = varName.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const regex = new RegExp(`^${escaped}(?:_[a-zA-Z0-9_-]+|:[a-zA-Z0-9_-]+)?\\s*(?:\\?\\?=|\\?=|\\+=|=\\+|:=|=|\.=|/=\\s*)\\s*(.*)$`);
   const results: string[] = [];
 
   for (const line of lines) {
@@ -320,8 +374,8 @@ export function extractBitbakeList(lines: string[], varName: string): string[] {
       if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
         val = val.slice(1, -1);
       }
-      // Split by whitespace
-      const tokens = val.split(/\s+/).map(t => t.trim()).filter(Boolean);
+      // Split by whitespace and strip any enclosed quotes
+      const tokens = val.split(/\s+/).map(t => t.replace(/^["']|["']$/g, '').trim()).filter(Boolean);
       results.push(...tokens);
     }
   }
@@ -330,39 +384,64 @@ export function extractBitbakeList(lines: string[], varName: string): string[] {
 }
 
 /**
- * Parse layer.conf content
+ * Extract dynamic extension dependencies from BBFILES_DYNAMIC entries
+ * Format: "collection-name:${LAYERDIR}/dynamic-layers/..."
+ */
+export function extractBitbakeDynamicDeps(lines: string[], collections: string[]): string[] {
+  const rawTokens: string[] = [];
+
+  // Check suffixed BBFILES_DYNAMIC_${col} first
+  for (const col of collections) {
+    const suffixed = extractBitbakeList(lines, `BBFILES_DYNAMIC_${col}`);
+    rawTokens.push(...suffixed);
+  }
+
+  // Also check bare BBFILES_DYNAMIC
+  const bare = extractBitbakeList(lines, 'BBFILES_DYNAMIC');
+  rawTokens.push(...bare);
+
+  const dynamicLayers: string[] = [];
+  const seen = new Set<string>();
+
+  for (const token of rawTokens) {
+    const cleanToken = token.trim().replace(/^["']|["']$/g, '');
+    if (!cleanToken) continue;
+
+    if (cleanToken.includes(':')) {
+      const prefix = cleanToken.split(':')[0].trim().replace(/^["']|["']$/g, '');
+      if (prefix && !seen.has(prefix)) {
+        seen.add(prefix);
+        dynamicLayers.push(prefix);
+      }
+    }
+  }
+
+  return dynamicLayers;
+}
+
+/**
+ * Parse layer.conf content according to standard Yocto conventions:
+ * 1. Extract collection name from BBFILE_COLLECTIONS (handling +=, .= across multiple lines)
+ * 2. Use collection name as suffix to find BBFILE_PRIORITY_${col}, LAYERDEPENDS_${col}, LAYERSERIES_COMPAT_${col}, BBFILE_PATTERN_${col}
+ * 3. Fallback to bare variables if suffixed versions not found
+ * 4. Parse BBFILES_DYNAMIC for optional dynamic extension dependencies
+ * 5. Resolve canonical layer display name (preferring BBFILE_COLLECTIONS, never 'conf')
  */
 export function parseLayerConf(content: string, layerFallbackName: string) {
   const lines = cleanBitbakeText(content);
+  const safeFallback = resolveLayerFallbackName(layerFallbackName);
 
-  // BBFILE_COLLECTIONS is usually: BBFILE_COLLECTIONS += "core" or "meta-python"
+  // Step 1 & 4: Extract collection names from BBFILE_COLLECTIONS (merging across lines)
   const collections = extractBitbakeList(lines, 'BBFILE_COLLECTIONS');
-  const collectionName = collections[0] || layerFallbackName.toLowerCase().replace(/[^a-z0-9_-]/g, '-');
 
-  // LAYERDEPENDS can be LAYERDEPENDS_collection or just LAYERDEPENDS
-  let dependsOn: string[] = [];
-  for (const col of collections.length ? collections : [collectionName]) {
-    const depList = extractBitbakeList(lines, `LAYERDEPENDS_${col}`);
-    if (depList.length > 0) {
-      dependsOn.push(...depList);
-    }
-  }
-  if (dependsOn.length === 0) {
-    dependsOn = extractBitbakeList(lines, 'LAYERDEPENDS');
-  }
+  // Step 5: Canonical layer name determination
+  const collectionName = collections.length > 0 ? collections[0] : safeFallback;
+  const allCollectionNames = collections.length > 0 ? collections : [collectionName];
 
-  // LAYERRECOMMENDS
-  let recommends: string[] = [];
-  for (const col of collections.length ? collections : [collectionName]) {
-    const recList = extractBitbakeList(lines, `LAYERRECOMMENDS_${col}`);
-    if (recList.length > 0) {
-      recommends.push(...recList);
-    }
-  }
-
+  // Step 2: Extract variables with collection suffix, fallback to bare variables
   // BBFILE_PRIORITY
   let priorityStr: string | null = null;
-  for (const col of collections.length ? collections : [collectionName]) {
+  for (const col of allCollectionNames) {
     priorityStr = extractBitbakeVar(lines, `BBFILE_PRIORITY_${col}`);
     if (priorityStr) break;
   }
@@ -371,24 +450,64 @@ export function parseLayerConf(content: string, layerFallbackName: string) {
   }
   const priority = priorityStr ? parseInt(priorityStr, 10) : undefined;
 
-  // LAYERSERIES_COMPAT
-  let seriesCompat: string[] = [];
-  for (const col of collections.length ? collections : [collectionName]) {
-    const compatList = extractBitbakeList(lines, `LAYERSERIES_COMPAT_${col}`);
-    if (compatList.length > 0) {
-      seriesCompat.push(...compatList);
+  // LAYERDEPENDS (hard dependencies)
+  const dependsOnList: string[] = [];
+  for (const col of allCollectionNames) {
+    const depList = extractBitbakeList(lines, `LAYERDEPENDS_${col}`);
+    if (depList.length > 0) {
+      dependsOnList.push(...depList);
     }
   }
-  if (seriesCompat.length === 0) {
-    seriesCompat = extractBitbakeList(lines, 'LAYERSERIES_COMPAT');
+  if (dependsOnList.length === 0) {
+    dependsOnList.push(...extractBitbakeList(lines, 'LAYERDEPENDS'));
   }
+
+  // LAYERSERIES_COMPAT
+  const seriesCompatList: string[] = [];
+  for (const col of allCollectionNames) {
+    const compatList = extractBitbakeList(lines, `LAYERSERIES_COMPAT_${col}`);
+    if (compatList.length > 0) {
+      seriesCompatList.push(...compatList);
+    }
+  }
+  if (seriesCompatList.length === 0) {
+    seriesCompatList.push(...extractBitbakeList(lines, 'LAYERSERIES_COMPAT'));
+  }
+
+  // BBFILE_PATTERN
+  let patternStr: string | null = null;
+  for (const col of allCollectionNames) {
+    patternStr = extractBitbakeVar(lines, `BBFILE_PATTERN_${col}`);
+    if (patternStr) break;
+  }
+  if (!patternStr) {
+    patternStr = extractBitbakeVar(lines, 'BBFILE_PATTERN');
+  }
+
+  // LAYERRECOMMENDS
+  const recommendsList: string[] = [];
+  for (const col of allCollectionNames) {
+    const recList = extractBitbakeList(lines, `LAYERRECOMMENDS_${col}`);
+    if (recList.length > 0) {
+      recommendsList.push(...recList);
+    }
+  }
+  if (recommendsList.length === 0) {
+    recommendsList.push(...extractBitbakeList(lines, 'LAYERRECOMMENDS'));
+  }
+
+  // Step 3: Handle BBFILES_DYNAMIC (conditional dynamic extensions)
+  const dynamicDepends = extractBitbakeDynamicDeps(lines, allCollectionNames);
 
   return {
     collectionName,
-    dependsOn: Array.from(new Set(dependsOn)),
-    recommends: Array.from(new Set(recommends)),
+    collections,
+    dependsOn: Array.from(new Set(dependsOnList)),
+    dynamicDepends: Array.from(new Set(dynamicDepends)),
+    recommends: Array.from(new Set(recommendsList)),
     priority: isNaN(priority as number) ? undefined : priority,
-    seriesCompat: Array.from(new Set(seriesCompat)),
+    seriesCompat: Array.from(new Set(seriesCompatList)),
+    pattern: patternStr || undefined,
     raw: content
   };
 }

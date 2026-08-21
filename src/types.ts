@@ -73,12 +73,14 @@ export interface ConflictDetectionResult {
 export interface YoctoLayer {
   id: string; // canonical name from BBFILE_COLLECTIONS or folder name
   collectionName: string;
+  collections?: string[];
   name: string; // human readable / folder name
   path: string;
   absolutePath?: string;
   priority?: number;
   seriesCompat: string[];
-  dependsOn: string[]; // layer collection names
+  dependsOn: string[]; // layer collection names (hard dependencies)
+  dynamicDepends?: string[]; // BBFILES_DYNAMIC conditional dependencies (dynamic extensions)
   recommends?: string[];
   recipes: YoctoRecipe[];
   bbappends: YoctoBbappend[];
@@ -145,4 +147,5 @@ export interface GraphLink extends d3.SimulationLinkDatum<GraphNode> {
   source: string | GraphNode;
   target: string | GraphNode;
   isGhostLink?: boolean;
+  isDynamicLink?: boolean;
 }

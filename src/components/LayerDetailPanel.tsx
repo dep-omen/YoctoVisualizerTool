@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
 import { YoctoBuildConfig, YoctoLayer } from '../types';
+import { isStandardKnownRelease } from '../utils/yoctoParser';
 import {
   X,
   Copy,
   Check,
   FileCode,
   FilePlus,
-  Code2
+  Code2,
+  Layers,
+  Sparkles
 } from 'lucide-react';
 
 interface LayerDetailPanelProps {
@@ -124,20 +127,35 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
           </div>
           <div>
             <div className="text-[10px] uppercase text-gray-500 mb-1 tracking-wider">Series</div>
-            <div className="text-xs font-mono text-white font-medium truncate" title={layer.seriesCompat?.join(' ') || 'None'}>
-              {layer.seriesCompat && layer.seriesCompat.length > 0
-                ? layer.seriesCompat.join(' ')
-                : 'Not specified'}
-            </div>
+            {layer.seriesCompat && layer.seriesCompat.length > 0 ? (
+              <div className="flex flex-wrap gap-1 items-center">
+                {layer.seriesCompat.map(rel => (
+                  <span
+                    key={rel}
+                    className="inline-flex items-center gap-1 text-xs font-mono text-white font-medium bg-gray-800/80 px-1.5 py-0.5 rounded border border-gray-700"
+                  >
+                    <span>{rel}</span>
+                    {!isStandardKnownRelease(rel) && (
+                      <span className="text-[9px] px-1 py-0.2 rounded bg-purple-900/50 text-purple-300 border border-purple-500/40">
+                        unreleased
+                      </span>
+                    )}
+                  </span>
+                ))}
+              </div>
+            ) : (
+              <div className="text-xs font-mono text-gray-500 italic">Not specified</div>
+            )}
           </div>
         </div>
 
         {/* Dependencies & Categories */}
         <div className="space-y-3">
-          {/* Layer Dependencies */}
+          {/* Hard Dependencies (LAYERDEPENDS) */}
           <div>
-            <div className="text-[10px] uppercase text-gray-500 mb-1.5 tracking-wider">
-              Layer Dependencies ({layer.dependsOn.length})
+            <div className="text-[10px] uppercase text-gray-500 mb-1.5 tracking-wider flex items-center gap-1.5">
+              <Layers className="w-3 h-3 text-blue-400" />
+              <span>Hard Dependencies ({layer.dependsOn.length})</span>
             </div>
             {layer.dependsOn.length > 0 ? (
               <div className="flex flex-wrap gap-1">
@@ -146,7 +164,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
                     key={dep}
                     id={`dep-pill-${dep}`}
                     onClick={() => onSelectLayer(dep)}
-                    className="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-[10px] text-gray-300 font-mono transition"
+                    className="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-[10px] text-gray-300 font-mono transition border border-gray-700/60"
                   >
                     {dep}
                   </button>
@@ -156,6 +174,31 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
               <span className="text-[11px] text-gray-600 font-mono italic">None (Root Layer)</span>
             )}
           </div>
+
+          {/* Dynamic Extensions (BBFILES_DYNAMIC) */}
+          {layer.dynamicDepends && layer.dynamicDepends.length > 0 && (
+            <div>
+              <div className="text-[10px] uppercase text-gray-500 mb-1 tracking-wider flex items-center gap-1.5">
+                <Sparkles className="w-3 h-3 text-cyan-400" />
+                <span>Dynamic Extensions ({layer.dynamicDepends.length})</span>
+              </div>
+              <p className="text-[10px] text-cyan-400/80 mb-1.5 italic leading-tight">
+                Extra recipes loaded if this layer is present
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {layer.dynamicDepends.map(dyn => (
+                  <button
+                    key={dyn}
+                    id={`dynamic-pill-${dyn}`}
+                    onClick={() => onSelectLayer(dyn)}
+                    className="px-2 py-0.5 bg-cyan-950/40 hover:bg-cyan-900/60 border border-cyan-500/40 rounded text-[10px] text-cyan-300 font-mono transition"
+                  >
+                    {dyn}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Required By */}
           {requiredByLayers.length > 0 && (
