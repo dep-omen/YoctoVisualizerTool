@@ -9,11 +9,12 @@ import { StatsBar } from './components/StatsBar';
 import { LayerGraph, LayerGraphRef } from './components/LayerGraph';
 import { LayerDetailPanel } from './components/LayerDetailPanel';
 import { ConflictDetector } from './components/ConflictDetector';
+import { PackageTracer } from './components/PackageTracer';
 import { EmptyState } from './components/EmptyState';
 
 export default function App() {
   const [config, setConfig] = useState<YoctoBuildConfig | null>(null);
-  const [activeTab, setActiveTab] = useState<'graph' | 'conflicts'>('graph');
+  const [activeTab, setActiveTab] = useState<'graph' | 'conflicts' | 'package-tracer'>('graph');
   const [layoutMode, setLayoutMode] = useState<'tree' | 'force'>('tree');
   const [selectedLayer, setSelectedLayer] = useState<YoctoLayer | null>(null);
   const [searchFilter, setSearchFilter] = useState<string>('');
@@ -25,6 +26,9 @@ export default function App() {
     total?: number;
   } | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const [rootHandle, setRootHandle] = useState<any>(null);
+  const [traceCount, setTraceCount] = useState<number>(0);
 
   const graphRef = useRef<LayerGraphRef>(null);
 
@@ -68,6 +72,7 @@ export default function App() {
 
       const parsedConfig = await scanYoctoDirectory(dirHandle, onProgress);
       setConfig(parsedConfig);
+      setRootHandle(dirHandle);
       setIsScanning(false);
       setScanStatus(null);
       setSelectedLayer(null);
@@ -100,6 +105,7 @@ export default function App() {
   const handleLoadDemo = () => {
     setErrorMessage(null);
     setConfig(DEMO_YOCTO_PROJECT);
+    setRootHandle(null);
     setSelectedLayer(null);
   };
 
@@ -152,6 +158,7 @@ export default function App() {
         onTabChange={setActiveTab}
         conflictCount={conflictCount}
         criticalCount={criticalCount}
+        traceCount={traceCount}
         layoutMode={layoutMode}
         onLayoutModeChange={setLayoutMode}
         onOpenFolder={handleOpenFolder}
@@ -199,6 +206,8 @@ export default function App() {
                 />
               )}
             </>
+          ) : activeTab === 'package-tracer' ? (
+            <PackageTracer config={config} rootHandle={rootHandle} onTraceCountChange={setTraceCount} />
           ) : (
             /* Conflict Detector View */
             <ConflictDetector config={config} />

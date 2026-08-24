@@ -15,10 +15,11 @@ import {
 
 interface HeaderBarProps {
   config: YoctoBuildConfig | null;
-  activeTab: 'graph' | 'conflicts';
-  onTabChange: (tab: 'graph' | 'conflicts') => void;
+  activeTab: 'graph' | 'conflicts' | 'package-tracer';
+  onTabChange: (tab: 'graph' | 'conflicts' | 'package-tracer') => void;
   conflictCount: number;
   criticalCount: number;
+  traceCount: number;
   layoutMode: 'tree' | 'force';
   onLayoutModeChange: (mode: 'tree' | 'force') => void;
   onOpenFolder: () => void;
@@ -35,6 +36,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   onTabChange,
   conflictCount,
   criticalCount,
+  traceCount,
   layoutMode,
   onLayoutModeChange,
   onOpenFolder,
@@ -103,6 +105,24 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
                 </span>
               ) : (
                 <CheckCircle2 className="w-3 h-3 text-green-400 ml-0.5" />
+              )}
+            </button>
+
+            <button
+              id="tab-package-tracer-btn"
+              onClick={() => onTabChange('package-tracer')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
+                activeTab === 'package-tracer'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60'
+              }`}
+            >
+              <FileCode className="w-3.5 h-3.5" />
+              <span>Package Tracer</span>
+              {traceCount > 0 && activeTab === 'package-tracer' && (
+                <span className="ml-0.5 px-1.5 py-0.2 rounded-full font-mono text-[10px] font-bold bg-white text-blue-900">
+                  {traceCount} deps
+                </span>
               )}
             </button>
           </div>
