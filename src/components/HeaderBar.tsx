@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { YoctoBuildConfig } from '../types';
 import {
   FolderOpen,
+  Calculator,
   Maximize2,
   Download,
   FileCode,
@@ -15,8 +16,8 @@ import {
 
 interface HeaderBarProps {
   config: YoctoBuildConfig | null;
-  activeTab: 'graph' | 'conflicts' | 'package-tracer' | 'bbappends';
-  onTabChange: (tab: 'graph' | 'conflicts' | 'package-tracer' | 'bbappends') => void;
+  activeTab: 'graph' | 'conflicts' | 'package-tracer' | 'bbappends' | 'estimator';
+  onTabChange: (tab: 'graph' | 'conflicts' | 'package-tracer' | 'bbappends' | 'estimator') => void;
   conflictCount: number;
   criticalCount: number;
   traceCount: number;
@@ -150,6 +151,18 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
                   {orphanCount > 0 && <span className="opacity-80"> · {orphanCount} orphans</span>}
                 </span>
               )}
+            </button>
+
+            <button
+              onClick={() => onTabChange('estimator')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
+                activeTab === 'estimator'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60'
+              }`}
+            >
+              <Calculator className="w-3.5 h-3.5" />
+              <span>Build Estimator</span>
             </button>
           </div>
         )}

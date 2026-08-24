@@ -11,11 +11,12 @@ import { LayerDetailPanel } from './components/LayerDetailPanel';
 import { ConflictDetector } from './components/ConflictDetector';
 import { PackageTracer } from './components/PackageTracer';
 import { BBAppendViewer } from './components/BBAppendViewer';
+import { BuildEstimator } from './components/BuildEstimator';
 import { EmptyState } from './components/EmptyState';
 
 export default function App() {
   const [config, setConfig] = useState<YoctoBuildConfig | null>(null);
-  const [activeTab, setActiveTab] = useState<'graph' | 'conflicts' | 'package-tracer' | 'bbappends'>('graph');
+  const [activeTab, setActiveTab] = useState<'graph' | 'conflicts' | 'package-tracer' | 'bbappends' | 'estimator'>('graph');
   const [layoutMode, setLayoutMode] = useState<'tree' | 'force'>('tree');
   const [selectedLayer, setSelectedLayer] = useState<YoctoLayer | null>(null);
   const [searchFilter, setSearchFilter] = useState<string>('');
@@ -225,6 +226,8 @@ export default function App() {
               onBbappendCountChange={(c, o) => { setBbappendCount(c); setOrphanCount(o); }} 
               initialFilterLayer={bbappendFilterLayer} 
             />
+          ) : activeTab === 'estimator' ? (
+            <BuildEstimator config={config} conflictCount={conflictCount} orphanCount={orphanCount} />
           ) : (
             /* Conflict Detector View */
             <ConflictDetector config={config} />
