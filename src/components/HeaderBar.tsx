@@ -15,11 +15,13 @@ import {
 
 interface HeaderBarProps {
   config: YoctoBuildConfig | null;
-  activeTab: 'graph' | 'conflicts' | 'package-tracer';
-  onTabChange: (tab: 'graph' | 'conflicts' | 'package-tracer') => void;
+  activeTab: 'graph' | 'conflicts' | 'package-tracer' | 'bbappends';
+  onTabChange: (tab: 'graph' | 'conflicts' | 'package-tracer' | 'bbappends') => void;
   conflictCount: number;
   criticalCount: number;
   traceCount: number;
+  bbappendCount: number;
+  orphanCount: number;
   layoutMode: 'tree' | 'force';
   onLayoutModeChange: (mode: 'tree' | 'force') => void;
   onOpenFolder: () => void;
@@ -37,6 +39,8 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   conflictCount,
   criticalCount,
   traceCount,
+  bbappendCount,
+  orphanCount,
   layoutMode,
   onLayoutModeChange,
   onOpenFolder,
@@ -122,6 +126,28 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
               {traceCount > 0 && activeTab === 'package-tracer' && (
                 <span className="ml-0.5 px-1.5 py-0.2 rounded-full font-mono text-[10px] font-bold bg-white text-blue-900">
                   {traceCount} deps
+                </span>
+              )}
+            </button>
+
+            <button
+              onClick={() => onTabChange('bbappends')}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
+                activeTab === 'bbappends'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60'
+              }`}
+            >
+              <FileCode className="w-3.5 h-3.5" />
+              <span>BBAppend Viewer</span>
+              {bbappendCount > 0 && (
+                <span className={`ml-0.5 px-1.5 py-0.2 rounded-full font-mono text-[10px] font-bold ${
+                  orphanCount > 0
+                    ? 'bg-red-500 text-white'
+                    : 'bg-white text-blue-900'
+                }`}>
+                  {bbappendCount}
+                  {orphanCount > 0 && <span className="opacity-80"> · {orphanCount} orphans</span>}
                 </span>
               )}
             </button>

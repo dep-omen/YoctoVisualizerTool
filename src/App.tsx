@@ -10,11 +10,12 @@ import { LayerGraph, LayerGraphRef } from './components/LayerGraph';
 import { LayerDetailPanel } from './components/LayerDetailPanel';
 import { ConflictDetector } from './components/ConflictDetector';
 import { PackageTracer } from './components/PackageTracer';
+import { BBAppendViewer } from './components/BBAppendViewer';
 import { EmptyState } from './components/EmptyState';
 
 export default function App() {
   const [config, setConfig] = useState<YoctoBuildConfig | null>(null);
-  const [activeTab, setActiveTab] = useState<'graph' | 'conflicts' | 'package-tracer'>('graph');
+  const [activeTab, setActiveTab] = useState<'graph' | 'conflicts' | 'package-tracer' | 'bbappends'>('graph');
   const [layoutMode, setLayoutMode] = useState<'tree' | 'force'>('tree');
   const [selectedLayer, setSelectedLayer] = useState<YoctoLayer | null>(null);
   const [searchFilter, setSearchFilter] = useState<string>('');
@@ -29,6 +30,9 @@ export default function App() {
 
   const [rootHandle, setRootHandle] = useState<any>(null);
   const [traceCount, setTraceCount] = useState<number>(0);
+  const [bbappendCount, setBbappendCount] = useState<number>(0);
+  const [orphanCount, setOrphanCount] = useState<number>(0);
+  const [bbappendFilterLayer, setBbappendFilterLayer] = useState<string | null>(null);
 
   const graphRef = useRef<LayerGraphRef>(null);
 
@@ -159,6 +163,8 @@ export default function App() {
         conflictCount={conflictCount}
         criticalCount={criticalCount}
         traceCount={traceCount}
+        bbappendCount={bbappendCount}
+        orphanCount={orphanCount}
         layoutMode={layoutMode}
         onLayoutModeChange={setLayoutMode}
         onOpenFolder={handleOpenFolder}
@@ -203,11 +209,22 @@ export default function App() {
                   allConfig={config}
                   onClose={() => setSelectedLayer(null)}
                   onSelectLayer={handleSelectLayerById}
+                  onViewBbappends={() => {
+                     setBbappendFilterLayer(selectedLayer.name);
+                     setActiveTab('bbappends');
+                  }}
                 />
               )}
             </>
           ) : activeTab === 'package-tracer' ? (
             <PackageTracer config={config} rootHandle={rootHandle} onTraceCountChange={setTraceCount} />
+          ) : activeTab === 'bbappends' ? (
+            <BBAppendViewer 
+              config={config} 
+              rootHandle={rootHandle} 
+              onBbappendCountChange={(c, o) => { setBbappendCount(c); setOrphanCount(o); }} 
+              initialFilterLayer={bbappendFilterLayer} 
+            />
           ) : (
             /* Conflict Detector View */
             <ConflictDetector config={config} />

@@ -3,9 +3,9 @@ import { extractBitbakeVar, extractBitbakeList } from './yoctoParser';
 
 const fileCache = new Map<string, string>();
 
-export async function readRecipeContent(rootHandle: any, layer: YoctoLayer, recipe: YoctoRecipe): Promise<string> {
-  if (!rootHandle || !layer.absolutePath) return '';
-  const fullPath = `${layer.absolutePath}/${recipe.relativePath}`;
+export async function readYoctoFile(rootHandle: any, layerAbsolutePath: string, relativePath: string): Promise<string> {
+  if (!rootHandle || !layerAbsolutePath) return '';
+  const fullPath = `${layerAbsolutePath}/${relativePath}`;
   if (fileCache.has(fullPath)) {
     return fileCache.get(fullPath)!;
   }
@@ -22,9 +22,13 @@ export async function readRecipeContent(rootHandle: any, layer: YoctoLayer, reci
     fileCache.set(fullPath, text);
     return text;
   } catch (err) {
-    console.warn('Failed to read recipe file', recipe.relativePath, err);
+    console.warn('Failed to read file', relativePath, err);
     return '';
   }
+}
+
+export async function readRecipeContent(rootHandle: any, layer: YoctoLayer, recipe: YoctoRecipe): Promise<string> {
+  return readYoctoFile(rootHandle, layer.absolutePath, recipe.relativePath);
 }
 
 export function cleanDepList(list: string[], pn: string): string[] {

@@ -17,6 +17,7 @@ interface LayerDetailPanelProps {
   allConfig: YoctoBuildConfig;
   onClose: () => void;
   onSelectLayer: (layerId: string) => void;
+  onViewBbappends?: () => void;
 }
 
 const CATEGORY_BADGES: Record<string, { label: string; bg: string; text: string; border: string }> = {
@@ -34,7 +35,8 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
   layer,
   allConfig,
   onClose,
-  onSelectLayer
+  onSelectLayer,
+  onViewBbappends
 }) => {
   const [activeTab, setActiveTab] = useState<'recipes' | 'bbappends' | 'conf'>('recipes');
   const [recipeSearch, setRecipeSearch] = useState('');
@@ -344,6 +346,17 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
 
           {activeTab === 'bbappends' && (
             <div>
+              {layer.bbappends.length > 0 && onViewBbappends && (
+                <div className="p-2 mb-2">
+                  <button
+                    onClick={onViewBbappends}
+                    className="w-full py-1.5 flex items-center justify-center gap-2 bg-amber-900/30 hover:bg-amber-800/40 border border-amber-500/30 rounded text-amber-400 text-xs font-semibold transition"
+                  >
+                    <FilePlus className="w-3.5 h-3.5" />
+                    Analyze BBAppends
+                  </button>
+                </div>
+              )}
               {filteredBbappends.length > 0 ? (
                 filteredBbappends.map((app, i) => (
                   <div
