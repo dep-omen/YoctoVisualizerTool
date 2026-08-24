@@ -16,10 +16,10 @@ export const StatsBar: React.FC<StatsBarProps> = ({
   const bblayersCount = config.layers.filter(l => l.source === 'bblayers.conf').length;
   const autoCount = config.layers.filter(l => l.source === 'auto-discovered').length;
   
-  const coreCount = config.layers.filter(l => l.category === 'core').length;
-  const oeCount = config.layers.filter(l => l.category === 'openembedded').length;
-  const bspCount = config.layers.filter(l => l.category === 'bsp').length;
-  const customCount = config.layers.filter(l => l.category === 'custom').length;
+  const coreCount = config.layers.filter(l => l.categoryType === 'core').length;
+  const oeCount = config.layers.filter(l => l.categoryType === 'openembedded' || l.categoryType === 'oe-sublayer').length;
+  const bspCount = config.layers.filter(l => l.categoryType === 'bsp' || l.categoryType === 'st-bsp').length;
+  const customCount = config.layers.filter(l => l.categoryType === 'custom').length;
 
   return (
     <div className="h-[32px] bg-[var(--bg-primary)] border-b border-[var(--border)] flex items-center justify-between px-4 shrink-0">
