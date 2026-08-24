@@ -227,19 +227,19 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
   };
 
   return (
-    <div className="flex-1 flex flex-col h-full bg-[#0d1117] overflow-y-auto custom-scrollbar text-gray-300">
+    <div className="flex-1 flex flex-col h-full bg-[var(--bg-primary)] overflow-y-auto custom-scrollbar text-[var(--text-primary)]">
       <div className="max-w-6xl mx-auto w-full p-6 space-y-8">
         
         {/* Section 1: Machine Profile */}
-        <div className="bg-[#161b22] border border-gray-800 rounded-lg p-6">
+        <div className="bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg p-6">
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-lg font-bold text-gray-200 flex items-center gap-2">
+            <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
               <Server className="w-5 h-5 text-blue-400" />
               Machine Profile
             </h2>
             <button 
               onClick={handleDetect}
-              className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded text-gray-300 transition"
+              className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-[var(--border)] rounded text-[var(--text-primary)] transition"
             >
               <Cpu className="w-3.5 h-3.5" />
               Detect from system
@@ -248,39 +248,39 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
           
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-6">
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-400">CPU Cores</label>
-              <input type="number" min="1" max="128" value={cores} onChange={e => setCores(Number(e.target.value))} className="bg-[#0d1117] border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+              <label className="text-xs font-semibold text-[var(--text-muted)]">CPU Cores</label>
+              <input type="number" min="1" max="128" value={cores} onChange={e => setCores(Number(e.target.value))} className="bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-400">RAM (GB)</label>
-              <input type="number" min="1" max="512" value={ram} onChange={e => setRam(Number(e.target.value))} className="bg-[#0d1117] border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
+              <label className="text-xs font-semibold text-[var(--text-muted)]">RAM (GB)</label>
+              <input type="number" min="1" max="512" value={ram} onChange={e => setRam(Number(e.target.value))} className="bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" />
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-400">Storage Type</label>
-              <select value={storage} onChange={e => setStorage(e.target.value as any)} className="bg-[#0d1117] border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              <label className="text-xs font-semibold text-[var(--text-muted)]">Storage Type</label>
+              <select value={storage} onChange={e => setStorage(e.target.value as any)} className="bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                 <option value="HDD">HDD</option>
                 <option value="SSD">SSD</option>
                 <option value="NVMe">NVMe</option>
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-400">sstate-cache</label>
-              <select value={sstate} onChange={e => setSstate(e.target.value as any)} className="bg-[#0d1117] border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              <label className="text-xs font-semibold text-[var(--text-muted)]">sstate-cache</label>
+              <select value={sstate} onChange={e => setSstate(e.target.value as any)} className="bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                 <option value="Yes">Yes (warm)</option>
                 <option value="No">No (cold)</option>
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-400">Network Speed</label>
-              <select value={network} onChange={e => setNetwork(e.target.value as any)} className="bg-[#0d1117] border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              <label className="text-xs font-semibold text-[var(--text-muted)]">Network Speed</label>
+              <select value={network} onChange={e => setNetwork(e.target.value as any)} className="bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                 <option value="Slow">Slow (&lt;10 Mbps)</option>
                 <option value="Normal">Normal (10-100)</option>
                 <option value="Fast">Fast (&gt;100 Mbps)</option>
               </select>
             </div>
             <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-semibold text-gray-400">Previous Build</label>
-              <select value={incremental} onChange={e => setIncremental(e.target.value as any)} className="bg-[#0d1117] border border-gray-700 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+              <label className="text-xs font-semibold text-[var(--text-muted)]">Previous Build</label>
+              <select value={incremental} onChange={e => setIncremental(e.target.value as any)} className="bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
                 <option value="Yes">Yes</option>
                 <option value="No">No</option>
               </select>
@@ -289,7 +289,7 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
           
           <button 
             onClick={() => setHasCalculated(true)}
-            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-md shadow-sm transition"
+            className="px-6 py-2 bg-blue-600 hover:bg-blue-500 text-white font-bold rounded-md  transition"
           >
             Calculate Estimate
           </button>
@@ -311,54 +311,54 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                        <div className="text-xs font-semibold mt-1 opacity-70">Cold build</div>
                     </div>
                     <div className="pb-1">
-                       <div className="text-xl font-bold text-gray-200">
+                       <div className="text-xl font-bold text-[var(--text-primary)]">
                          {formatTime(est.warmTotal)}
                        </div>
-                       <div className="text-xs font-semibold text-gray-400">Warm build (sstate)</div>
+                       <div className="text-xs font-semibold text-[var(--text-muted)]">Warm build (sstate)</div>
                     </div>
                  </div>
               </div>
               
-              <div className="bg-[#161b22] border border-gray-800 p-4 rounded-lg flex flex-col justify-between">
+              <div className="bg-[var(--bg-panel)] border border-[var(--border)] p-4 rounded-lg flex flex-col justify-between">
                 <div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1.5 mb-2"><Network className="w-3.5 h-3.5" /> Fetch phase</div>
-                  <div className="text-xl font-bold text-gray-200">{formatTime(est.fetchMin)}</div>
+                  <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase flex items-center gap-1.5 mb-2"><Network className="w-3.5 h-3.5" /> Fetch phase</div>
+                  <div className="text-xl font-bold text-[var(--text-primary)]">{formatTime(est.fetchMin)}</div>
                 </div>
-                <div className="mt-3 text-xs text-gray-400 font-mono">
+                <div className="mt-3 text-xs text-[var(--text-muted)] font-mono">
                   <div>{est.recipeCount} recipes</div>
                   <div>~{est.fetchGb.toFixed(1)} GB</div>
                 </div>
               </div>
 
-              <div className="bg-[#161b22] border border-gray-800 p-4 rounded-lg flex flex-col justify-between">
+              <div className="bg-[var(--bg-panel)] border border-[var(--border)] p-4 rounded-lg flex flex-col justify-between">
                 <div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1.5 mb-2"><PackageSearch className="w-3.5 h-3.5" /> Parse phase</div>
-                  <div className="text-xl font-bold text-gray-200">{formatTime(est.parseMin)}</div>
+                  <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase flex items-center gap-1.5 mb-2"><PackageSearch className="w-3.5 h-3.5" /> Parse phase</div>
+                  <div className="text-xl font-bold text-[var(--text-primary)]">{formatTime(est.parseMin)}</div>
                 </div>
-                <div className="mt-3 text-xs text-gray-400 font-mono">
+                <div className="mt-3 text-xs text-[var(--text-muted)] font-mono">
                   <div>{est.recipeCount} recipes</div>
                   <div>{est.bbappendCount} bbappends</div>
                 </div>
               </div>
               
-              <div className="bg-[#161b22] border border-gray-800 p-4 rounded-lg flex flex-col justify-between">
+              <div className="bg-[var(--bg-panel)] border border-[var(--border)] p-4 rounded-lg flex flex-col justify-between">
                 <div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1.5 mb-2"><Hammer className="w-3.5 h-3.5" /> Compile phase</div>
-                  <div className="text-xl font-bold text-gray-200">{formatTime(est.compileMin)}</div>
+                  <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase flex items-center gap-1.5 mb-2"><Hammer className="w-3.5 h-3.5" /> Compile phase</div>
+                  <div className="text-xl font-bold text-[var(--text-primary)]">{formatTime(est.compileMin)}</div>
                 </div>
-                <div className="mt-3 text-[10px] text-gray-500">Heaviest phase, scaled by {Math.min(cores, 8)} useful cores</div>
+                <div className="mt-3 text-[10px] text-[var(--text-muted)]">Heaviest phase, scaled by {Math.min(cores, 8)} useful cores</div>
               </div>
               
-              <div className="bg-[#161b22] border border-gray-800 p-4 rounded-lg flex flex-col justify-between">
+              <div className="bg-[var(--bg-panel)] border border-[var(--border)] p-4 rounded-lg flex flex-col justify-between">
                 <div>
-                  <div className="text-[10px] font-bold text-gray-500 uppercase flex items-center gap-1.5 mb-2"><PackageOpen className="w-3.5 h-3.5" /> Image creation</div>
-                  <div className="text-xl font-bold text-gray-200">{formatTime(est.imageMin)}</div>
+                  <div className="text-[10px] font-bold text-[var(--text-muted)] uppercase flex items-center gap-1.5 mb-2"><PackageOpen className="w-3.5 h-3.5" /> Image creation</div>
+                  <div className="text-xl font-bold text-[var(--text-primary)]">{formatTime(est.imageMin)}</div>
                 </div>
-                <div className="mt-3 text-[10px] text-gray-500">Scales with I/O ({storage})</div>
+                <div className="mt-3 text-[10px] text-[var(--text-muted)]">Scales with I/O ({storage})</div>
               </div>
             </div>
 
-            <div className="text-center text-[10px] text-gray-500 italic mt-2">
+            <div className="text-center text-[10px] text-[var(--text-muted)] italic mt-2">
               Estimates are based on recipe count and category weights. Actual build times vary significantly based on recipe complexity, network conditions, and compiler optimization flags. Cold build estimates assume no sstate-cache. Use these numbers for planning only.
             </div>
 
@@ -369,8 +369,8 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
               <div className="lg:col-span-2 space-y-6">
                  
                  {/* Layer Contribution Chart */}
-                 <div className="bg-[#161b22] border border-gray-800 rounded-lg p-5">
-                    <h3 className="text-sm font-bold text-gray-200 mb-4 flex items-center gap-2">
+                 <div className="bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg p-5">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                       <Layers className="w-4 h-4 text-blue-400" />
                       Layer Contribution
                     </h3>
@@ -381,19 +381,19 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                     </div>
                     <div className="flex flex-wrap gap-3">
                       {est.layerContributions.slice(0, 8).map(l => (
-                        <div key={l.name} className="flex items-center gap-1.5 text-xs text-gray-400">
+                        <div key={l.name} className="flex items-center gap-1.5 text-xs text-[var(--text-muted)]">
                           <div className={`w-2 h-2 rounded-full ${est.layerColors[l.name] || 'bg-gray-500'}`} />
                           <span className="truncate max-w-[120px]">{l.name}</span>
-                          <span className="font-mono text-gray-500">{l.percent.toFixed(0)}%</span>
+                          <span className="font-mono text-[var(--text-muted)]">{l.percent.toFixed(0)}%</span>
                         </div>
                       ))}
                     </div>
                  </div>
 
                  {/* Recipe Weight Table */}
-                 <div className="bg-[#161b22] border border-gray-800 rounded-lg overflow-hidden flex flex-col max-h-[400px]">
-                    <div className="p-4 border-b border-gray-800 flex items-center justify-between bg-[#0d1117]">
-                      <h3 className="text-sm font-bold text-gray-200 flex items-center gap-2">
+                 <div className="bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg overflow-hidden flex flex-col max-h-[400px]">
+                    <div className="p-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--bg-primary)]">
+                      <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
                         <Database className="w-4 h-4 text-amber-400" />
                         Heaviest Recipes (Top 20)
                       </h3>
@@ -401,7 +401,7 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                     <div className="overflow-y-auto flex-1">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-[#161b22] text-[10px] uppercase text-gray-500 border-b border-gray-800 sticky top-0 shadow-sm">
+                          <tr className="bg-[var(--bg-panel)] text-[10px] uppercase text-[var(--text-muted)] border-b border-[var(--border)] sticky top-0 ">
                             <th className="px-4 py-2 font-semibold">Recipe Name</th>
                             <th className="px-4 py-2 font-semibold">Layer</th>
                             <th className="px-4 py-2 font-semibold">Category</th>
@@ -411,10 +411,10 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                         </thead>
                         <tbody className="text-xs">
                           {est.weights.map((w, i) => (
-                            <tr key={i} className="border-b border-gray-800/50 hover:bg-gray-800/30">
-                              <td className="px-4 py-2 font-mono text-gray-300">{w.name}</td>
-                              <td className="px-4 py-2 text-gray-400">{w.layer}</td>
-                              <td className="px-4 py-2 text-gray-500">{w.category}</td>
+                            <tr key={i} className="border-b border-[var(--border)]/50 hover:bg-gray-800/30">
+                              <td className="px-4 py-2 font-mono text-[var(--text-primary)]">{w.name}</td>
+                              <td className="px-4 py-2 text-[var(--text-muted)]">{w.layer}</td>
+                              <td className="px-4 py-2 text-[var(--text-muted)]">{w.category}</td>
                               <td className="px-4 py-2 text-right font-mono text-amber-400">{w.compileTime}m base</td>
                               <td className="px-4 py-2 text-center">
                                 {w.parallelizable ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500 mx-auto" /> : <AlertCircle className="w-3.5 h-3.5 text-red-400 mx-auto" />}
@@ -432,14 +432,14 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                  <div className="flex justify-end">
                    <button 
                      onClick={handleExport}
-                     className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 text-xs font-semibold rounded border border-gray-700 transition"
+                     className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-[var(--text-primary)] text-xs font-semibold rounded border border-[var(--border)] transition"
                    >
                      <Download className="w-3.5 h-3.5" /> Export Report
                    </button>
                  </div>
                  
-                 <div className="bg-[#161b22] border border-gray-800 rounded-lg p-5">
-                    <h3 className="text-sm font-bold text-gray-200 mb-4 flex items-center gap-2">
+                 <div className="bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg p-5">
+                    <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                       <Zap className="w-4 h-4 text-amber-400" />
                       Recommendations
                     </h3>
@@ -454,8 +454,8 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                               {r.title}
                             </div>
                           </div>
-                          <p className="text-[11px] text-gray-300 ml-6 leading-relaxed">{r.desc}</p>
-                          <div className="mt-2 ml-6 text-[10px] font-mono bg-black/30 p-1.5 rounded text-gray-400 border border-gray-800 break-words whitespace-pre-wrap">
+                          <p className="text-[11px] text-[var(--text-primary)] ml-6 leading-relaxed">{r.desc}</p>
+                          <div className="mt-2 ml-6 text-[10px] font-mono bg-black/30 p-1.5 rounded text-[var(--text-muted)] border border-[var(--border)] break-words whitespace-pre-wrap">
                             {r.fix}
                           </div>
                         </div>
@@ -464,14 +464,14 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                  </div>
 
                  {/* local.conf generator */}
-                 <div className="bg-[#161b22] border border-gray-800 rounded-lg p-5">
+                 <div className="bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg p-5">
                     <div className="flex items-center justify-between mb-3">
-                      <h3 className="text-sm font-bold text-gray-200">local.conf Optimizer</h3>
-                      <button className="text-gray-500 hover:text-gray-300 transition" onClick={handleCopyConfig}>
+                      <h3 className="text-sm font-bold text-[var(--text-primary)]">local.conf Optimizer</h3>
+                      <button className="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition" onClick={handleCopyConfig}>
                         <Copy className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <pre className="text-[10px] font-mono bg-[#090c10] border border-gray-800 p-3 rounded text-blue-300 overflow-x-auto whitespace-pre-wrap">
+                    <pre className="text-[10px] font-mono bg-[#090c10] border border-[var(--border)] p-3 rounded text-blue-300 overflow-x-auto whitespace-pre-wrap">
                       {`# Build performance settings — generated\nBB_NUMBER_THREADS = "${cores}"\nPARALLEL_MAKE = "-j ${cores}"\nSSTATE_DIR = "\${TOPDIR}/../sstate-cache"\nDL_DIR = "\${TOPDIR}/../downloads"\n\n# Uncomment to enable build history\n# INHERIT += "buildhistory"\n# BUILDHISTORY_COMMIT = "1"`}
                     </pre>
                  </div>

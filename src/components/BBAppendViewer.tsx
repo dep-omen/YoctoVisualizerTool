@@ -22,7 +22,7 @@ interface BbappendEntry {
 const SyntaxHighlighted: React.FC<{ text: string, highlights?: Map<number, 'green' | 'amber' | 'red'> }> = ({ text, highlights }) => {
   const lines = text.split('\n');
   return (
-    <pre className="font-mono text-xs text-gray-300 w-full">
+    <pre className="font-mono text-xs text-[var(--text-primary)] w-full">
       {lines.map((line, i) => {
         let bg = 'bg-transparent';
         if (highlights && highlights.has(i)) {
@@ -259,22 +259,22 @@ export const BBAppendViewer: React.FC<BBAppendViewerProps> = ({ config, rootHand
 
 // ... next chunk
   return (
-    <div className="flex-1 flex h-full bg-[#0d1117] overflow-hidden">
+    <div className="flex-1 flex h-full bg-[var(--bg-primary)] overflow-hidden">
       {/* Left panel: List */}
-      <div className="w-[25%] min-w-[300px] border-r border-gray-800 bg-[#161b22] flex flex-col">
-        <div className="p-4 border-b border-gray-800 shrink-0">
-          <h2 className="text-sm font-bold text-gray-200 mb-3 flex items-center gap-2">
+      <div className="w-[25%] min-w-[300px] border-r border-[var(--border)] bg-[var(--bg-panel)] flex flex-col">
+        <div className="p-4 border-b border-[var(--border)] shrink-0">
+          <h2 className="text-sm font-bold text-[var(--text-primary)] mb-3 flex items-center gap-2">
             <FileCode className="w-4 h-4 text-blue-400" />
             BBAppend List
           </h2>
           <div className="relative mb-3">
-            <Search className="absolute left-3 top-2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3 top-2 w-4 h-4 text-[var(--text-muted)]" />
             <input
               type="text"
               placeholder="Filter by recipe or layer..."
               value={filterText}
               onChange={e => setFilterText(e.target.value)}
-              className="w-full bg-[#0d1117] border border-gray-700 rounded py-1.5 pl-9 pr-3 text-sm text-gray-200 focus:outline-none focus:border-blue-500"
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded py-1.5 pl-9 pr-3 text-sm text-[var(--text-primary)] focus:outline-none focus:border-blue-500"
             />
           </div>
           <div className="flex flex-wrap gap-1.5 text-xs">
@@ -282,13 +282,13 @@ export const BBAppendViewer: React.FC<BBAppendViewerProps> = ({ config, rootHand
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-2 py-1 rounded border ${statusFilter === s ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-800 border-gray-700 text-gray-400 hover:text-gray-200'}`}
+                className={`px-2 py-1 rounded border ${statusFilter === s ? 'bg-blue-600 border-blue-500 text-white' : 'bg-gray-800 border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
               >
                 {s}
               </button>
             ))}
           </div>
-          <div className="flex items-center gap-3 text-[10px] text-gray-500 mt-3 font-mono">
+          <div className="flex items-center gap-3 text-[10px] text-[var(--text-muted)] mt-3 font-mono">
             <span className="text-green-400">Valid: {validCount}</span>
             <span className="text-red-400">Orphan: {orphanCount}</span>
             <span className="text-amber-400">Override: {overrideCount}</span>
@@ -303,39 +303,39 @@ export const BBAppendViewer: React.FC<BBAppendViewerProps> = ({ config, rootHand
               className={`w-full text-left p-2 rounded flex flex-col gap-1.5 transition ${selectedEntry === e ? 'bg-blue-900/30 border border-blue-500/50' : 'hover:bg-gray-800 border border-transparent'}`}
             >
               <div className="flex items-start justify-between gap-2">
-                <span className="text-sm font-mono text-gray-300 truncate">{e.bbappend.filename}</span>
+                <span className="text-sm font-mono text-[var(--text-primary)] truncate">{e.bbappend.filename}</span>
                 {e.status === 'VALID' && <div className="px-1.5 py-0.5 rounded bg-green-900/40 text-green-400 text-[9px] font-bold">VALID</div>}
                 {e.status === 'ORPHAN' && <div className="px-1.5 py-0.5 rounded bg-red-900/40 text-red-400 text-[9px] font-bold">ORPHAN</div>}
                 {e.status === 'OVERRIDE' && <div className="px-1.5 py-0.5 rounded bg-amber-900/40 text-amber-400 text-[9px] font-bold">OVERRIDE</div>}
               </div>
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-1 text-xs text-gray-500">
+                <div className="flex items-center gap-1 text-xs text-[var(--text-muted)]">
                   <Layers className="w-3 h-3" />
                   <span className="truncate max-w-[120px]">{e.layer.name}</span>
                 </div>
-                <span className="text-[10px] text-gray-400 font-mono truncate max-w-[100px]">{e.bbappend.targetRecipe}</span>
+                <span className="text-[10px] text-[var(--text-muted)] font-mono truncate max-w-[100px]">{e.bbappend.targetRecipe}</span>
               </div>
             </button>
           ))}
           {filteredEntries.length === 0 && (
-             <div className="p-4 text-center text-sm text-gray-500">No matching bbappends found.</div>
+             <div className="p-4 text-center text-sm text-[var(--text-muted)]">No matching bbappends found.</div>
           )}
         </div>
       </div>
 
       {/* Center panel: Original Recipe */}
-      <div className="w-[40%] min-w-[300px] border-r border-gray-800 bg-[#0d1117] flex flex-col">
+      <div className="w-[40%] min-w-[300px] border-r border-[var(--border)] bg-[var(--bg-primary)] flex flex-col">
         {selectedEntry ? (
           <>
-            <div className="p-4 border-b border-gray-800 bg-[#161b22] shrink-0">
-              <h3 className="text-sm font-bold text-gray-200 mb-1">Target Recipe</h3>
+            <div className="p-4 border-b border-[var(--border)] bg-[var(--bg-panel)] shrink-0">
+              <h3 className="text-sm font-bold text-[var(--text-primary)] mb-1">Target Recipe</h3>
               {selectedEntry.targetRecipe ? (
-                 <div className="text-xs text-gray-400 font-mono break-all">{selectedEntry.targetRecipe.relativePath}</div>
+                 <div className="text-xs text-[var(--text-muted)] font-mono break-all">{selectedEntry.targetRecipe.relativePath}</div>
               ) : (
                  <div className="text-xs text-red-400 font-mono">Not found</div>
               )}
             </div>
-            <div className="flex-1 overflow-auto bg-[#0d1117] relative">
+            <div className="flex-1 overflow-auto bg-[var(--bg-primary)] relative">
               {isLoading ? (
                 <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-blue-400" /></div>
               ) : selectedEntry.targetRecipe ? (
@@ -347,8 +347,8 @@ export const BBAppendViewer: React.FC<BBAppendViewerProps> = ({ config, rootHand
                        <AlertCircle className="w-5 h-5 text-red-400" />
                        <h4 className="font-bold text-red-400">Target recipe not found</h4>
                      </div>
-                     <p className="text-sm text-gray-300 mb-2">Looking for a recipe matching: <span className="font-mono bg-black/30 px-1 rounded">{selectedEntry.bbappend.targetRecipe}</span></p>
-                     <p className="text-xs text-gray-400">This bbappend might be orphaned, or the layer was written for a different Yocto configuration/release where this recipe existed.</p>
+                     <p className="text-sm text-[var(--text-primary)] mb-2">Looking for a recipe matching: <span className="font-mono bg-black/30 px-1 rounded">{selectedEntry.bbappend.targetRecipe}</span></p>
+                     <p className="text-xs text-[var(--text-muted)]">This bbappend might be orphaned, or the layer was written for a different Yocto configuration/release where this recipe existed.</p>
                   </div>
                 </div>
               )}
@@ -360,10 +360,10 @@ export const BBAppendViewer: React.FC<BBAppendViewerProps> = ({ config, rootHand
       </div>
 
       {/* Right panel: BBAppend & Summary */}
-      <div className="w-[35%] min-w-[250px] bg-[#0d1117] flex flex-col">
+      <div className="w-[35%] min-w-[250px] bg-[var(--bg-primary)] flex flex-col">
         {selectedEntry ? (
           <>
-            <div className="flex-1 overflow-auto bg-[#0d1117] relative border-b border-gray-800">
+            <div className="flex-1 overflow-auto bg-[var(--bg-primary)] relative border-b border-[var(--border)]">
                {isLoading ? (
                  <div className="absolute inset-0 flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-blue-400" /></div>
                ) : (
@@ -371,23 +371,23 @@ export const BBAppendViewer: React.FC<BBAppendViewerProps> = ({ config, rootHand
                )}
             </div>
             
-            <div className="h-[40%] min-h-[250px] bg-[#161b22] p-4 flex flex-col shrink-0">
-               <h3 className="text-sm font-bold text-gray-200 mb-4 flex items-center gap-2">
+            <div className="h-[40%] min-h-[250px] bg-[var(--bg-panel)] p-4 flex flex-col shrink-0">
+               <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
                  <AlertTriangle className="w-4 h-4 text-amber-400" />
                  Change Summary
                </h3>
                <div className="flex-1 overflow-y-auto space-y-3 pr-2">
                  {changes.length > 0 ? changes.map((c, i) => (
-                   <div key={i} className="bg-[#0d1117] border border-gray-700 rounded p-3">
+                   <div key={i} className="bg-[var(--bg-primary)] border border-[var(--border)] rounded p-3">
                      <div className="text-xs font-bold text-amber-400 mb-1">{c.label}</div>
-                     <div className="text-xs text-gray-300">{c.desc}</div>
-                     <div className="mt-2 text-[10px] text-gray-500 flex items-center gap-1">
+                     <div className="text-xs text-[var(--text-primary)]">{c.desc}</div>
+                     <div className="mt-2 text-[10px] text-[var(--text-muted)] flex items-center gap-1">
                         <Layers className="w-3 h-3" />
                         by {selectedEntry.layer.name}
                      </div>
                    </div>
                  )) : (
-                   <div className="text-sm text-gray-500 italic">No significant variable or function changes detected.</div>
+                   <div className="text-sm text-[var(--text-muted)] italic">No significant variable or function changes detected.</div>
                  )}
                </div>
             </div>

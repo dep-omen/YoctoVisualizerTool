@@ -1029,7 +1029,7 @@ export function generateStandaloneHtml(): string {
 
       node.append("circle")
         .attr("r", d => d.radius)
-        .attr("fill", d => d.categoryType === 'core' ? '#161b22' : d.categoryType === 'openembedded' ? '#161b22' : d.categoryType === 'st-bsp' ? '#161b22' : '#161b22')
+        .attr("fill", d => d.categoryType === 'core' ? 'var(--bg-panel)' : d.categoryType === 'openembedded' ? 'var(--bg-panel)' : d.categoryType === 'st-bsp' ? 'var(--bg-panel)' : 'var(--bg-panel)')
         .attr("stroke", d => d.categoryType === 'core' ? '#3b82f6' : d.categoryType === 'openembedded' ? '#14b8a6' : d.categoryType === 'st-bsp' ? '#f59e0b' : '#a855f7')
         .attr("stroke-width", 2.5);
 

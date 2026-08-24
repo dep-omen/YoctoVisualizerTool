@@ -20,59 +20,59 @@ interface LayerGraphProps {
 
 const CATEGORY_COLORS: Record<LayerCategory, { fill: string; stroke: string; glow: string; text: string; label: string }> = {
   core: {
-    fill: '#161b22',
-    stroke: '#3b82f6',
+    fill: 'var(--bg-panel)',
+    stroke: 'var(--node-core)',
     glow: 'rgba(59, 130, 246, 0.35)',
-    text: '#93c5fd',
+    text: 'var(--text-primary)',
     label: 'CORE / POKY'
   },
   openembedded: {
-    fill: '#161b22',
-    stroke: '#14b8a6',
+    fill: 'var(--bg-panel)',
+    stroke: 'var(--node-oe)',
     glow: 'rgba(20, 184, 166, 0.35)',
-    text: '#5eead4',
+    text: 'var(--text-primary)',
     label: 'OPENEMBEDDED'
   },
   'oe-sublayer': {
-    fill: '#161b22',
-    stroke: '#06b6d4',
+    fill: 'var(--bg-panel)',
+    stroke: 'var(--node-oe)',
     glow: 'rgba(6, 182, 212, 0.35)',
-    text: '#67e8f9',
+    text: 'var(--text-primary)',
     label: 'OE SUBLAYER'
   },
   'st-bsp': {
-    fill: '#161b22',
-    stroke: '#f59e0b',
+    fill: 'var(--bg-panel)',
+    stroke: 'var(--node-bsp)',
     glow: 'rgba(245, 158, 11, 0.35)',
-    text: '#fcd34d',
+    text: 'var(--text-primary)',
     label: 'BSP / SILICON'
   },
   bsp: {
-    fill: '#161b22',
-    stroke: '#f59e0b',
+    fill: 'var(--bg-panel)',
+    stroke: 'var(--node-bsp)',
     glow: 'rgba(245, 158, 11, 0.35)',
-    text: '#fcd34d',
+    text: 'var(--text-primary)',
     label: 'BSP LAYER'
   },
   custom: {
-    fill: '#161b22',
-    stroke: '#a855f7',
+    fill: 'var(--bg-panel)',
+    stroke: 'var(--node-custom)',
     glow: 'rgba(168, 85, 247, 0.35)',
-    text: '#d8b4fe',
+    text: 'var(--text-primary)',
     label: 'CUSTOM'
   },
   missing: {
-    fill: '#1c1917',
-    stroke: '#ef4444',
+    fill: 'var(--bg-panel)',
+    stroke: 'var(--danger)',
     glow: 'rgba(239, 68, 68, 0.4)',
-    text: '#fca5a5',
+    text: 'var(--text-primary)',
     label: 'MISSING'
   },
   ghost: {
-    fill: '#161b22',
-    stroke: '#ef4444',
+    fill: 'var(--bg-panel)',
+    stroke: 'var(--node-ghost)',
     glow: 'rgba(239, 68, 68, 0.35)',
-    text: '#fca5a5',
+    text: 'var(--text-primary)',
     label: 'UNMET'
   }
 };
@@ -152,7 +152,7 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
     const clone = svgEl.cloneNode(true) as SVGSVGElement;
     clone.setAttribute('width', `${width * 2}`);
     clone.setAttribute('height', `${height * 2}`);
-    clone.style.backgroundColor = '#0d1117';
+    clone.style.backgroundColor = 'var(--bg-primary)';
 
     const xml = new XMLSerializer().serializeToString(clone);
     const svgBlob = new Blob([xml], { type: 'image/svg+xml;charset=utf-8' });
@@ -170,7 +170,7 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
           return;
         }
 
-        ctx.fillStyle = '#0d1117';
+        ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--bg-primary').trim() || 'var(--bg-primary)';
         ctx.fillRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
         URL.revokeObjectURL(blobURL);
@@ -247,11 +247,11 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
         .attr('fill', color);
     };
 
-    createMarker('arrow-default', '#4b5563');
-    createMarker('arrow-highlight', '#38bdf8');
-    createMarker('arrow-ghost', '#ef4444');
-    createMarker('arrow-dynamic', '#06b6d4');
-    createMarker('arrow-dynamic-highlight', '#22d3ee');
+    createMarker('arrow-default', 'var(--text-muted)');
+    createMarker('arrow-highlight', 'var(--accent)');
+    createMarker('arrow-ghost', 'var(--danger)');
+    createMarker('arrow-dynamic', 'var(--text-muted)');
+    createMarker('arrow-dynamic-highlight', 'var(--accent-hover)');
 
     // Glow filter
     const filter = defs.append('filter')
@@ -430,8 +430,8 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
       .join('path')
       .attr('class', 'link-line')
       .attr('fill', 'none')
-      .attr('stroke', d => d.isGhostLink ? '#ef4444' : d.isDynamicLink ? '#06b6d4' : '#4b5563')
-      .attr('stroke-width', d => d.isDynamicLink ? 1.8 : 2)
+      .attr('stroke', d => d.isGhostLink ? 'var(--danger)' : d.isDynamicLink ? 'var(--text-muted)' : 'var(--border-strong)')
+      .attr('stroke-width', 1.5)
       .attr('stroke-dasharray', d => (d.isGhostLink || d.isDynamicLink) ? '4,4' : 'none')
       .attr('marker-end', d => d.isGhostLink ? 'url(#arrow-ghost)' : d.isDynamicLink ? 'url(#arrow-dynamic)' : 'url(#arrow-default)');
 
@@ -485,7 +485,7 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
     nodeElements.filter(d => d.isMissing).append('circle')
       .attr('r', d => d.radius + 5)
       .attr('fill', 'none')
-      .attr('stroke', '#ef4444')
+      .attr('stroke', 'var(--danger)')
       .attr('stroke-width', 1.5)
       .attr('stroke-dasharray', '3,3');
 
@@ -501,15 +501,15 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
       .attr('width', 48)
       .attr('height', 16)
       .attr('rx', 4)
-      .attr('fill', '#21262d')
-      .attr('stroke', '#30363d')
+      .attr('fill', 'var(--bg-tertiary)')
+      .attr('stroke', 'var(--border-strong)')
       .attr('stroke-width', 0.8);
 
     badgeGroup.append('text')
       .attr('x', -9)
       .attr('y', 3.5)
       .attr('text-anchor', 'middle')
-      .attr('fill', '#e5e7eb')
+      .attr('fill', 'var(--text-primary)')
       .attr('font-size', '9px')
       .attr('font-weight', '700')
       .attr('font-family', 'monospace')
@@ -519,7 +519,7 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
       .attr('x', 0)
       .attr('y', 3)
       .attr('text-anchor', 'middle')
-      .attr('fill', '#4b5563')
+      .attr('fill', 'var(--text-muted)')
       .attr('font-size', '8px')
       .text('·');
 
@@ -527,7 +527,7 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
       .attr('x', 10)
       .attr('y', 3.5)
       .attr('text-anchor', 'middle')
-      .attr('fill', '#fbbf24')
+      .attr('fill', 'var(--warning)')
       .attr('font-size', '9px')
       .attr('font-weight', '700')
       .attr('font-family', 'monospace')
@@ -538,7 +538,7 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
       .append('text')
       .attr('text-anchor', 'middle')
       .attr('dy', '0.35em')
-      .attr('fill', d => d.isGhost ? '#ef4444' : '#f87171')
+      .attr('fill', d => d.isGhost ? 'var(--danger)' : 'var(--danger)')
       .attr('font-size', '10px')
       .attr('font-weight', '700')
       .text(d => d.isGhost ? 'UNMET' : 'MISSING');
@@ -548,9 +548,9 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
       .attr('class', 'node-title')
       .attr('text-anchor', 'middle')
       .attr('y', d => d.radius + 15)
-      .attr('fill', '#ffffff')
-      .attr('font-size', '11px')
-      .attr('font-weight', '700')
+      .attr('fill', 'var(--text-primary)')
+      .attr('font-size', '12px')
+      .attr('font-weight', '500')
       .attr('letter-spacing', '-0.01em')
       .text(d => {
         const n = d.name;
@@ -726,19 +726,19 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
 
         if (isSelected) {
           circle
-            .attr('stroke', '#38bdf8')
+            .attr('stroke', 'var(--accent)')
             .attr('stroke-width', 4)
             .style('filter', 'url(#glow)');
         } else if (isHovered) {
           circle
-            .attr('stroke', '#f3f4f6')
+            .attr('stroke', 'var(--bg-secondary)')
             .attr('stroke-width', 3.5)
             .style('filter', 'url(#glow)');
         } else if (matchesSearch && filterQuery) {
           circle
-            .attr('stroke', '#38bdf8')
+            .attr('stroke', 'var(--accent)')
             .attr('stroke-width', 3)
-            .style('filter', 'drop-shadow(0 0 8px rgba(56, 189, 248, 0.8))');
+            .style('filter', 'drop-(0 0 8px rgba(56, 189, 248, 0.8))');
         } else {
           circle
             .attr('stroke', baseColor.stroke)
@@ -760,22 +760,22 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
 
         if (isHighlighted) {
           linkEl
-            .attr('stroke', d.isDynamicLink ? '#22d3ee' : '#38bdf8')
+            .attr('stroke', d.isDynamicLink ? 'var(--accent-hover)' : 'var(--accent)')
             .attr('stroke-width', d.isDynamicLink ? 2.5 : 3)
             .attr('stroke-dasharray', (d.isGhostLink || d.isDynamicLink) ? '4,4' : 'none')
             .attr('opacity', 1)
             .attr('marker-end', d.isDynamicLink ? 'url(#arrow-dynamic-highlight)' : 'url(#arrow-highlight)');
         } else if (activeId) {
           linkEl
-            .attr('stroke', '#374151')
+            .attr('stroke', 'var(--border-strong)')
             .attr('stroke-width', 1.5)
             .attr('stroke-dasharray', (d.isGhostLink || d.isDynamicLink) ? '4,4' : 'none')
             .attr('opacity', 0.15)
             .attr('marker-end', 'url(#arrow-default)');
         } else {
           linkEl
-            .attr('stroke', d.isGhostLink ? '#ef4444' : d.isDynamicLink ? '#06b6d4' : '#4b5563')
-            .attr('stroke-width', d.isDynamicLink ? 1.8 : 2)
+            .attr('stroke', d.isGhostLink ? 'var(--danger)' : d.isDynamicLink ? 'var(--text-muted)' : 'var(--border-strong)')
+            .attr('stroke-width', 1.5)
             .attr('stroke-dasharray', (d.isGhostLink || d.isDynamicLink) ? '4,4' : 'none')
             .attr('opacity', d.isDynamicLink ? 0.85 : 0.7)
             .attr('marker-end', d.isGhostLink ? 'url(#arrow-ghost)' : d.isDynamicLink ? 'url(#arrow-dynamic)' : 'url(#arrow-default)');
@@ -785,12 +785,12 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
   }, [selectedLayer, hoveredNodeId, searchFilter, config]);
 
   return (
-    <div ref={containerRef} id="graph-viewport" className="relative w-full h-full bg-[#0d1117] select-none overflow-hidden">
+    <div ref={containerRef} id="graph-viewport" className="relative w-full h-full bg-[var(--bg-primary)] select-none overflow-hidden">
       {/* Background grid texture */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-20"
         style={{
-          backgroundImage: 'radial-gradient(#30363d 1px, transparent 1px)',
+          backgroundImage: 'radial-gradient(var(--border) 1px, transparent 1px)',
           backgroundSize: '24px 24px'
         }}
       />
@@ -799,7 +799,7 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
       {config.discoveryMode === 'fallback' && !bannerDismissed && (
         <div 
           id="fallback-discovery-banner"
-          className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 bg-amber-950/90 text-amber-200 border border-amber-500/50 px-4 py-2 rounded-lg shadow-2xl text-xs backdrop-blur pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300"
+          className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 bg-amber-950/90 text-amber-200 border border-amber-500/50 px-4 py-2 rounded-lg  text-xs backdrop-blur pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300"
         >
           <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
           <span className="font-medium">
@@ -822,7 +822,7 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
       />
 
       {/* Bottom Legend Overlay */}
-      <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] text-gray-400 bg-[#0d1117]/90 backdrop-blur px-3 py-2 rounded border border-gray-800 pointer-events-auto shadow-xl">
+      <div className="absolute bottom-4 left-4 sm:bottom-6 sm:left-6 flex flex-wrap items-center gap-3 sm:gap-4 text-[10px] text-[var(--text-muted)] bg-[var(--bg-primary)]/90 backdrop-blur px-3 py-2 rounded border border-[var(--border)] pointer-events-auto ">
         <span className="flex items-center gap-1.5 font-medium tracking-wide">
           <span className="w-2.5 h-2.5 bg-blue-500 rounded-full inline-block" /> CORE / POKY
         </span>
@@ -838,11 +838,11 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
         <span className="flex items-center gap-1.5 font-medium tracking-wide text-red-400">
           <span className="w-2.5 h-2.5 bg-red-500 rounded-full inline-block border border-dashed border-red-300" /> UNMET / GHOST
         </span>
-        <span className="flex items-center gap-1.5 font-medium tracking-wide text-cyan-400 border-l border-gray-800 pl-3">
+        <span className="flex items-center gap-1.5 font-medium tracking-wide text-cyan-400 border-l border-[var(--border)] pl-3">
           <span className="w-4 h-0 border-t-2 border-dashed border-cyan-400 inline-block" /> DYNAMIC EXTENSION
         </span>
-        <span className="hidden md:flex items-center gap-1.5 text-gray-500 border-l border-gray-800 pl-3">
-          <span>Badge: <strong className="text-gray-300 font-mono">r</strong>=recipes, <strong className="text-amber-400 font-mono">a</strong>=bbappends</span>
+        <span className="hidden md:flex items-center gap-1.5 text-[var(--text-muted)] border-l border-[var(--border)] pl-3">
+          <span>Badge: <strong className="text-[var(--text-primary)] font-mono">r</strong>=recipes, <strong className="text-amber-400 font-mono">a</strong>=bbappends</span>
         </span>
       </div>
     </div>

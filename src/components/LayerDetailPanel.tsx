@@ -28,7 +28,7 @@ const CATEGORY_BADGES: Record<string, { label: string; bg: string; text: string;
   bsp: { label: 'BSP', bg: 'bg-amber-900/30', text: 'text-amber-500', border: 'border-amber-500/30' },
   custom: { label: 'CUSTOM', bg: 'bg-purple-900/30', text: 'text-purple-400', border: 'border-purple-500/30' },
   missing: { label: 'MISSING', bg: 'bg-red-900/30', text: 'text-red-400', border: 'border-red-500/30' },
-  ghost: { label: 'UNMET', bg: 'bg-gray-800/60', text: 'text-gray-400', border: 'border-gray-600/40' }
+  ghost: { label: 'UNMET', bg: 'bg-gray-800/60', text: 'text-[var(--text-muted)]', border: 'border-gray-600/40' }
 };
 
 export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
@@ -78,10 +78,10 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
   return (
     <aside
       id="layer-detail-panel"
-      className="w-full sm:w-[340px] md:w-[360px] lg:w-[380px] h-full border-l border-gray-800 bg-[#090c10] flex flex-col shrink-0 text-gray-200 z-20 select-none shadow-2xl"
+      className="w-full sm:w-[340px] md:w-[360px] lg:w-[380px] h-full border-l border-[var(--border)] bg-[#090c10] flex flex-col shrink-0 text-[var(--text-primary)] z-20 select-none "
     >
       {/* Top Metadata Header */}
-      <div className="p-5 border-b border-gray-800 space-y-4">
+      <div className="p-5 border-b border-[var(--border)] space-y-4">
         {/* Title & Badge */}
         <div>
           <div className="flex items-start justify-between gap-2 mb-1.5">
@@ -97,7 +97,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
               <button
                 id="close-detail-panel-btn"
                 onClick={onClose}
-                className="p-1 rounded text-gray-500 hover:text-white hover:bg-gray-800 transition"
+                className="p-1 rounded text-[var(--text-muted)] hover:text-white hover:bg-gray-800 transition"
                 title="Close"
               >
                 <X className="w-4 h-4" />
@@ -105,13 +105,13 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center justify-between text-xs font-mono text-gray-500 group">
+          <div className="flex items-center justify-between text-xs font-mono text-[var(--text-muted)] group">
             <span className="truncate" title={layer.path}>
               {layer.path}
             </span>
             <button
               onClick={handleCopyPath}
-              className="p-1 rounded hover:bg-gray-800 text-gray-500 hover:text-gray-300 ml-1 shrink-0"
+              className="p-1 rounded hover:bg-gray-800 text-[var(--text-muted)] hover:text-[var(--text-primary)] ml-1 shrink-0"
               title="Copy path"
             >
               {copiedPath ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
@@ -122,19 +122,19 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
         {/* Priority & Series Grid */}
         <div className="grid grid-cols-2 gap-4">
           <div>
-            <div className="text-[10px] uppercase text-gray-500 mb-1 tracking-wider">Priority</div>
+            <div className="text-[10px] uppercase text-[var(--text-muted)] mb-1 tracking-wider">Priority</div>
             <div className="text-lg font-mono text-white font-semibold">
               {layer.priority !== undefined ? layer.priority : '—'}
             </div>
           </div>
           <div>
-            <div className="text-[10px] uppercase text-gray-500 mb-1 tracking-wider">Series</div>
+            <div className="text-[10px] uppercase text-[var(--text-muted)] mb-1 tracking-wider">Series</div>
             {layer.seriesCompat && layer.seriesCompat.length > 0 ? (
               <div className="flex flex-wrap gap-1 items-center">
                 {layer.seriesCompat.map(rel => (
                   <span
                     key={rel}
-                    className="inline-flex items-center gap-1 text-xs font-mono text-white font-medium bg-gray-800/80 px-1.5 py-0.5 rounded border border-gray-700"
+                    className="inline-flex items-center gap-1 text-xs font-mono text-white font-medium bg-gray-800/80 px-1.5 py-0.5 rounded border border-[var(--border)]"
                   >
                     <span>{rel}</span>
                     {!isStandardKnownRelease(rel) && (
@@ -146,7 +146,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
                 ))}
               </div>
             ) : (
-              <div className="text-xs font-mono text-gray-500 italic">Not specified</div>
+              <div className="text-xs font-mono text-[var(--text-muted)] italic">Not specified</div>
             )}
           </div>
         </div>
@@ -155,7 +155,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
         <div className="space-y-3">
           {/* Hard Dependencies (LAYERDEPENDS) */}
           <div>
-            <div className="text-[10px] uppercase text-gray-500 mb-1.5 tracking-wider flex items-center gap-1.5">
+            <div className="text-[10px] uppercase text-[var(--text-muted)] mb-1.5 tracking-wider flex items-center gap-1.5">
               <Layers className="w-3 h-3 text-blue-400" />
               <span>Hard Dependencies ({layer.dependsOn.length})</span>
             </div>
@@ -166,7 +166,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
                     key={dep}
                     id={`dep-pill-${dep}`}
                     onClick={() => onSelectLayer(dep)}
-                    className="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-[10px] text-gray-300 font-mono transition border border-gray-700/60"
+                    className="px-2 py-0.5 bg-gray-800 hover:bg-gray-700 rounded text-[10px] text-[var(--text-primary)] font-mono transition border border-[var(--border)]/60"
                   >
                     {dep}
                   </button>
@@ -180,7 +180,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
           {/* Dynamic Extensions (BBFILES_DYNAMIC) */}
           {layer.dynamicDepends && layer.dynamicDepends.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase text-gray-500 mb-1 tracking-wider flex items-center gap-1.5">
+              <div className="text-[10px] uppercase text-[var(--text-muted)] mb-1 tracking-wider flex items-center gap-1.5">
                 <Sparkles className="w-3 h-3 text-cyan-400" />
                 <span>Dynamic Extensions ({layer.dynamicDepends.length})</span>
               </div>
@@ -205,7 +205,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
           {/* Required By */}
           {requiredByLayers.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase text-gray-500 mb-1.5 tracking-wider">
+              <div className="text-[10px] uppercase text-[var(--text-muted)] mb-1.5 tracking-wider">
                 Required By ({requiredByLayers.length})
               </div>
               <div className="flex flex-wrap gap-1">
@@ -226,7 +226,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
           {/* Recipe Categories */}
           {layer.recipeCategories.length > 0 && (
             <div>
-              <div className="text-[10px] uppercase text-gray-500 mb-1.5 tracking-wider">
+              <div className="text-[10px] uppercase text-[var(--text-muted)] mb-1.5 tracking-wider">
                 Recipe Categories
               </div>
               <div className="flex flex-wrap gap-1">
@@ -243,7 +243,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
                       className={`px-2 py-0.5 rounded text-[10px] font-mono transition ${
                         isSelected
                           ? 'bg-blue-600 text-white font-semibold'
-                          : 'border border-gray-700 text-gray-400 hover:border-gray-500 hover:text-gray-300'
+                          : 'border border-[var(--border)] text-[var(--text-muted)] hover:border-gray-500 hover:text-[var(--text-primary)]'
                       }`}
                     >
                       {cat} ({count})
@@ -257,14 +257,14 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
       </div>
 
       {/* Tabs */}
-      <div className="px-3 pt-2 bg-[#090c10] flex items-center gap-2 border-b border-gray-800 text-xs">
+      <div className="px-3 pt-2 bg-[#090c10] flex items-center gap-2 border-b border-[var(--border)] text-xs">
         <button
           id="tab-recipes-btn"
           onClick={() => setActiveTab('recipes')}
           className={`pb-2 px-2 text-[11px] font-semibold flex items-center gap-1.5 border-b-2 transition ${
             activeTab === 'recipes'
               ? 'border-blue-500 text-blue-400'
-              : 'border-transparent text-gray-500 hover:text-gray-300'
+              : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
           }`}
         >
           <FileCode className="w-3 h-3" />
@@ -277,7 +277,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
           className={`pb-2 px-2 text-[11px] font-semibold flex items-center gap-1.5 border-b-2 transition ${
             activeTab === 'bbappends'
               ? 'border-amber-500 text-amber-500'
-              : 'border-transparent text-gray-500 hover:text-gray-300'
+              : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
           }`}
         >
           <FilePlus className="w-3 h-3" />
@@ -291,7 +291,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
             className={`pb-2 px-2 text-[11px] font-semibold flex items-center gap-1.5 border-b-2 transition ${
               activeTab === 'conf'
                 ? 'border-purple-500 text-purple-400'
-                : 'border-transparent text-gray-500 hover:text-gray-300'
+                : 'border-transparent text-[var(--text-muted)] hover:text-[var(--text-primary)]'
             }`}
           >
             <Code2 className="w-3 h-3" />
@@ -301,10 +301,10 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
       </div>
 
       {/* Main List Body */}
-      <div className="flex-1 flex flex-col min-h-0 bg-[#0d1117]">
+      <div className="flex-1 flex flex-col min-h-0 bg-[var(--bg-primary)]">
         {/* Search Bar for Tab items */}
         {activeTab !== 'conf' && (
-          <div className="p-3 bg-[#161b22] border-b border-gray-800">
+          <div className="p-3 bg-[var(--bg-panel)] border-b border-[var(--border)]">
             <input
               type="text"
               placeholder={`Filter ${
@@ -312,7 +312,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
               }`}
               value={recipeSearch}
               onChange={e => setRecipeSearch(e.target.value)}
-              className="w-full bg-[#0d1117] border border-gray-700 rounded px-3 py-1.5 text-xs text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500 font-sans"
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] rounded px-3 py-1.5 text-xs text-[var(--text-primary)] placeholder-gray-500 focus:outline-none focus:border-blue-500 font-sans"
             />
           </div>
         )}
@@ -330,14 +330,14 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
                   >
                     <span className="truncate">{r.filename}</span>
                     {r.version && (
-                      <span className="opacity-0 group-hover:opacity-100 text-gray-500 text-[10px] shrink-0 ml-2">
+                      <span className="opacity-0 group-hover:opacity-100 text-[var(--text-muted)] text-[10px] shrink-0 ml-2">
                         v{r.version}
                       </span>
                     )}
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8 text-xs text-gray-500 font-sans">
+                <div className="text-center py-8 text-xs text-[var(--text-muted)] font-sans">
                   {layer.recipes.length === 0 ? 'No recipes in this layer' : 'No recipes matched filter'}
                 </div>
               )}
@@ -365,11 +365,11 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
                     title={app.relativePath}
                   >
                     <span className="truncate">{app.filename}</span>
-                    <span className="text-[9px] text-gray-500 not-italic shrink-0 ml-2">(override)</span>
+                    <span className="text-[9px] text-[var(--text-muted)] not-italic shrink-0 ml-2">(override)</span>
                   </div>
                 ))
               ) : (
-                <div className="text-center py-8 text-xs text-gray-500 font-sans">
+                <div className="text-center py-8 text-xs text-[var(--text-muted)] font-sans">
                   {layer.bbappends.length === 0 ? 'No bbappends in this layer' : 'No bbappends matched filter'}
                 </div>
               )}
@@ -378,7 +378,7 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
 
           {activeTab === 'conf' && layer.rawLayerConf && (
             <div className="p-3">
-              <pre className="p-3 rounded bg-[#090c10] text-[11px] font-mono text-blue-300 whitespace-pre-wrap overflow-x-auto border border-gray-800 custom-scrollbar leading-relaxed">
+              <pre className="p-3 rounded bg-[#090c10] text-[11px] font-mono text-blue-300 whitespace-pre-wrap overflow-x-auto border border-[var(--border)] custom-scrollbar leading-relaxed">
                 {layer.rawLayerConf}
               </pre>
             </div>

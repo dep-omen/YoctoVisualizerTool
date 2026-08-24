@@ -1,22 +1,16 @@
 import React, { useState } from 'react';
 import { YoctoBuildConfig } from '../types';
+import { Logo } from './Logo';
 import {
-  FolderOpen,
-  Calculator,
-  Maximize2,
-  Download,
-  FileCode,
-  Layers,
-  ChevronDown,
-  Sparkles,
-  ShieldAlert,
-  Network,
-  CheckCircle2
+  FolderOpen, Calculator, Maximize2, Download, FileCode, Layers, 
+  ChevronDown, AlertTriangle, Network, Search, Sparkles, Sun, Moon
 } from 'lucide-react';
 
 interface HeaderBarProps {
+  theme: 'dark' | 'light';
+  setTheme: (theme: 'dark' | 'light') => void;
   config: YoctoBuildConfig | null;
-  activeTab: 'graph' | 'conflicts' | 'package-tracer' | 'bbappends' | 'estimator';
+  activeTab: string;
   onTabChange: (tab: 'graph' | 'conflicts' | 'package-tracer' | 'bbappends' | 'estimator') => void;
   conflictCount: number;
   criticalCount: number;
@@ -34,6 +28,7 @@ interface HeaderBarProps {
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
+  theme, setTheme,
   config,
   activeTab,
   onTabChange,
@@ -54,230 +49,162 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
   const [showDistroFeaturesModal, setShowDistroFeaturesModal] = useState(false);
 
   return (
-    <header
-      id="yocto-header-bar"
-      className="h-14 border-b border-gray-800 flex items-center px-4 justify-between bg-[#161b22] shrink-0 z-30 select-none gap-2"
-    >
-      {/* Left: Brand + BitBake Config Specs */}
-      <div className="flex items-center gap-3 min-w-0">
-        <div className="flex items-center gap-2.5 shrink-0">
-          <div className="w-6 h-6 bg-blue-500 rounded flex items-center justify-center shadow-sm shadow-blue-500/30">
-            <span className="text-[10px] font-black text-white font-mono tracking-tighter">YO</span>
-          </div>
-          <h1 className="font-semibold text-sm tracking-tight text-white truncate hidden sm:block">
-            Yocto Layer Visualizer
-          </h1>
-        </div>
-
-        {/* Tab Switcher */}
+    <header className="h-[48px] bg-[var(--bg-secondary)] border-b border-[var(--border)] flex items-center justify-between px-4 shrink-0 transition-colors">
+      
+      {/* Left: Logo, Title, Divider, Tabs */}
+      <div className="flex items-center h-full">
+        <Logo size={28} />
+        <span className="ml-2 text-[14px] font-medium text-[var(--text-primary)] whitespace-nowrap">
+          Yocto Layer Visualizer
+        </span>
+        
+        <div className="h-6 w-[1px] bg-[var(--border)] mx-4 shrink-0" />
+        
+        {/* Tabs inside header */}
         {config && (
-          <div className="flex items-center bg-[#0d1117] p-0.5 rounded-lg border border-gray-800 ml-1">
+          <div className="flex items-center h-full">
             <button
-              id="tab-layer-graph-btn"
               onClick={() => onTabChange('graph')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
-                activeTab === 'graph'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60'
-              }`}
+              className={`h-full flex items-center px-3 text-[13px] transition ${activeTab === 'graph' ? 'text-[var(--text-primary)] border-b-[2px] border-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
             >
-              <Network className="w-3.5 h-3.5" />
-              <span>Layer Graph</span>
+              Layer Graph
             </button>
-
             <button
-              id="tab-conflict-detector-btn"
               onClick={() => onTabChange('conflicts')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
-                activeTab === 'conflicts'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60'
-              }`}
+              className={`h-full flex items-center gap-1.5 px-3 text-[13px] transition ${activeTab === 'conflicts' ? 'text-[var(--text-primary)] border-b-[2px] border-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
             >
-              <ShieldAlert className={`w-3.5 h-3.5 ${criticalCount > 0 ? 'text-red-400' : conflictCount > 0 ? 'text-amber-400' : 'text-green-400'}`} />
-              <span>Conflict Detector</span>
-              {conflictCount > 0 ? (
-                <span
-                  className={`ml-0.5 px-1.5 py-0.2 rounded-full font-mono text-[10px] font-bold ${
-                    criticalCount > 0
-                      ? 'bg-red-500 text-white animate-pulse'
-                      : activeTab === 'conflicts'
-                      ? 'bg-white text-blue-900'
-                      : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
-                  }`}
-                >
+              Conflict Detector
+              {conflictCount > 0 && (
+                <span className={`ml-0.5 px-[4px] rounded-full text-[11px] font-medium ${criticalCount > 0 ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--accent-bg)] text-[var(--accent-text)]'}`}>
                   {conflictCount}
                 </span>
-              ) : (
-                <CheckCircle2 className="w-3 h-3 text-green-400 ml-0.5" />
               )}
             </button>
-
             <button
-              id="tab-package-tracer-btn"
               onClick={() => onTabChange('package-tracer')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
-                activeTab === 'package-tracer'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60'
-              }`}
+              className={`h-full flex items-center gap-1.5 px-3 text-[13px] transition ${activeTab === 'package-tracer' ? 'text-[var(--text-primary)] border-b-[2px] border-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
             >
-              <FileCode className="w-3.5 h-3.5" />
-              <span>Package Tracer</span>
-              {traceCount > 0 && activeTab === 'package-tracer' && (
-                <span className="ml-0.5 px-1.5 py-0.2 rounded-full font-mono text-[10px] font-bold bg-white text-blue-900">
-                  {traceCount} deps
+              Package Tracer
+              {traceCount > 0 && (
+                <span className="ml-0.5 px-[4px] rounded-full bg-[var(--accent-bg)] text-[var(--accent-text)] text-[11px] font-medium">
+                  {traceCount}
                 </span>
               )}
             </button>
-
             <button
               onClick={() => onTabChange('bbappends')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
-                activeTab === 'bbappends'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60'
-              }`}
+              className={`h-full flex items-center gap-1.5 px-3 text-[13px] transition ${activeTab === 'bbappends' ? 'text-[var(--text-primary)] border-b-[2px] border-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
             >
-              <FileCode className="w-3.5 h-3.5" />
-              <span>BBAppend Viewer</span>
+              BBAppend Viewer
               {bbappendCount > 0 && (
-                <span className={`ml-0.5 px-1.5 py-0.2 rounded-full font-mono text-[10px] font-bold ${
-                  orphanCount > 0
-                    ? 'bg-red-500 text-white'
-                    : 'bg-white text-blue-900'
-                }`}>
+                <span className={`ml-0.5 px-[4px] rounded-full text-[11px] font-medium ${orphanCount > 0 ? 'bg-[var(--danger-bg)] text-[var(--danger)]' : 'bg-[var(--accent-bg)] text-[var(--accent-text)]'}`}>
                   {bbappendCount}
-                  {orphanCount > 0 && <span className="opacity-80"> · {orphanCount} orphans</span>}
                 </span>
               )}
             </button>
-
             <button
               onClick={() => onTabChange('estimator')}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold transition ${
-                activeTab === 'estimator'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200 hover:bg-gray-800/60'
-              }`}
+              className={`h-full flex items-center px-3 text-[13px] transition ${activeTab === 'estimator' ? 'text-[var(--text-primary)] border-b-[2px] border-[var(--accent)]' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'}`}
             >
-              <Calculator className="w-3.5 h-3.5" />
-              <span>Build Estimator</span>
+              Build Estimator
             </button>
           </div>
         )}
+      </div>
 
+      {/* Center: Machine and Distro Pills */}
+      <div className="hidden xl:flex items-center justify-center flex-1 mx-4">
         {config && (
-          <>
-            <div className="h-4 w-[1px] bg-gray-700 mx-1 hidden lg:block shrink-0" />
-            <div className="hidden xl:flex items-center gap-2 text-[10px] overflow-hidden">
-              {config.machine && (
-                <span
-                  className="px-2 py-1 bg-gray-800 rounded text-blue-400 font-mono truncate"
-                  title={`Target Machine: ${config.machine}`}
-                >
-                  MACHINE: {config.machine}
-                </span>
-              )}
-              {config.distro && (
-                <span
-                  className="px-2 py-1 bg-gray-800 rounded text-teal-400 font-mono truncate"
-                  title={`Distribution: ${config.distro}`}
-                >
-                  DISTRO: {config.distro}
-                </span>
-              )}
-            </div>
-          </>
+          <div className="flex items-center gap-2">
+            {config.machine && (
+              <span className="px-[6px] py-[3px] bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-full text-[12px] truncate max-w-[200px]" title={`Target Machine: ${config.machine}`}>
+                <span className="text-[var(--text-secondary)] mr-1">MACHINE:</span>
+                <span className="text-[var(--accent-text)]">{config.machine}</span>
+              </span>
+            )}
+            {config.distro && (
+              <button 
+                onClick={() => setShowDistroFeaturesModal(true)}
+                className="flex items-center px-[6px] py-[3px] bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-full text-[12px] truncate max-w-[200px] hover:border-[var(--border-strong)] transition" 
+                title={`Distribution: ${config.distro}`}
+              >
+                <span className="text-[var(--text-secondary)] mr-1">DISTRO:</span>
+                <span className="text-[var(--accent-text)]">{config.distro}</span>
+                <ChevronDown className="w-3 h-3 ml-1 text-[var(--text-muted)]" />
+              </button>
+            )}
+          </div>
         )}
       </div>
 
       {/* Right: Actions */}
       <div className="flex items-center gap-2 shrink-0">
-        {/* Load Demo Switcher */}
         <button
-          id="load-demo-btn"
-          onClick={onLoadDemo}
-          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[#21262d] border border-gray-700 rounded text-xs text-gray-200 hover:bg-[#30363d] transition font-medium"
-          title="Switch to STM32MP1 sample project"
+          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+          className="flex items-center justify-center w-[36px] h-[36px] rounded bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-secondary)] hover:bg-[var(--bg-tertiary)] hover:text-[var(--accent)] hover:border-[var(--border-strong)] transition"
+          title="Toggle Theme"
         >
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-          <span>Demo Data</span>
+          {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>
 
-        {/* Layout Toggle (Tree / Force) */}
+        <button
+          onClick={onLoadDemo}
+          className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-[6px] text-[12px] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] transition"
+          title="Switch to STM32MP1 sample project"
+        >
+          <Sparkles className="w-3.5 h-3.5" />
+          <span>Demo Data</span>
+        </button>
+        
         {config && activeTab === 'graph' && (
-          <div className="flex items-center bg-[#0d1117] border border-gray-700 rounded p-0.5" id="layout-toggle-group">
+          <div className="flex items-center gap-1">
             <button
-              id="layout-tree-btn"
               onClick={() => onLayoutModeChange('tree')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition ${
-                layoutMode === 'tree'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-              title="Hierarchical Top-Down Tree Layout"
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-[6px] text-[12px] transition ${layoutMode === 'tree' ? 'bg-[var(--bg-secondary)] border border-[var(--border-strong)] text-[var(--text-primary)]' : 'bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'}`}
             >
-              <span>⊞ Tree</span>
+              Tree
             </button>
             <button
-              id="layout-force-btn"
               onClick={() => onLayoutModeChange('force')}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-semibold transition ${
-                layoutMode === 'force'
-                  ? 'bg-blue-600 text-white shadow-sm'
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-              title="Force-Directed Physical Layout"
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-[6px] text-[12px] transition ${layoutMode === 'force' ? 'bg-[var(--bg-secondary)] border border-[var(--border-strong)] text-[var(--text-primary)]' : 'bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)]'}`}
             >
-              <span>⊙ Force</span>
+              Force
             </button>
           </div>
         )}
 
-        {/* Fit Graph (only on graph tab) */}
         {config && activeTab === 'graph' && (
           <button
-            id="fit-graph-btn"
             onClick={onFitGraph}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#21262d] border border-gray-700 rounded text-xs text-gray-200 hover:bg-[#30363d] transition font-medium"
-            title="Fit Graph to Viewport"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-[6px] text-[12px] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] transition"
           >
-            <Maximize2 className="w-3 h-3 text-gray-300" />
+            <Maximize2 className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Fit Graph</span>
           </button>
         )}
 
-        {/* Export PNG (only on graph tab) */}
         {config && activeTab === 'graph' && (
           <button
-            id="export-png-btn"
             onClick={onExportPng}
-            className="flex items-center gap-1.5 px-3 py-1.5 bg-[#21262d] border border-gray-700 rounded text-xs text-gray-200 hover:bg-[#30363d] transition font-medium"
-            title="Export High-Res Graph as PNG"
+            className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-[6px] text-[12px] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] transition"
           >
-            <Download className="w-3 h-3 text-gray-300" />
+            <Download className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Export PNG</span>
           </button>
         )}
 
-        {/* Standalone HTML Export */}
         <button
-          id="export-standalone-html-btn"
           onClick={onDownloadHtml}
-          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-[#21262d] border border-gray-700 rounded text-xs text-gray-200 hover:bg-[#30363d] transition font-medium"
-          title="Download single self-contained HTML file"
+          className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-[6px] text-[12px] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] transition"
         >
-          <FileCode className="w-3.5 h-3.5 text-purple-400" />
+          <FileCode className="w-3.5 h-3.5" />
           <span>Standalone HTML</span>
         </button>
 
-        {/* Open Folder Primary Button */}
         <button
-          id="open-folder-header-btn"
           onClick={onOpenFolder}
           disabled={isScanning}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-blue-600 border border-blue-500 rounded text-xs text-white hover:bg-blue-500 disabled:opacity-50 transition font-semibold shadow-sm"
+          className="flex items-center gap-1.5 px-3.5 py-1.5 bg-[var(--accent)] border border-[var(--accent)] rounded-[6px] text-[12px] text-white hover:bg-[var(--accent-hover)] disabled:opacity-50 transition font-medium"
         >
           <FolderOpen className="w-3.5 h-3.5" />
           <span>{isScanning ? 'Scanning...' : 'Open Folder'}</span>
@@ -286,49 +213,33 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
 
       {/* Modal for DISTRO_FEATURES */}
       {showDistroFeaturesModal && config && config.distroFeatures && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="bg-[#161b22] border border-gray-800 rounded-xl p-5 max-w-lg w-full shadow-2xl space-y-4">
-            <div className="flex items-center justify-between border-b border-gray-800 pb-3">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Layers className="w-4 h-4 text-blue-400" />
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-sm">
+          <div className="bg-[var(--bg-panel)] border border-[var(--border)] rounded-[8px] p-4 max-w-lg w-full">
+            <div className="flex items-center justify-between border-b border-[var(--border)] pb-3 mb-3">
+              <h3 className="text-[14px] font-medium text-[var(--text-primary)] flex items-center gap-2">
+                <Layers className="w-4 h-4 text-[var(--accent)]" />
                 DISTRO_FEATURES ({config.distroFeatures.length})
               </h3>
               <button
                 onClick={() => setShowDistroFeaturesModal(false)}
-                className="text-xs text-gray-400 hover:text-white px-2 py-1 rounded bg-[#21262d] border border-gray-700"
+                className="text-[12px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
               >
                 Close
               </button>
             </div>
-            <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto custom-scrollbar p-1">
+            <div className="flex flex-wrap gap-1.5 max-h-60 overflow-y-auto custom-scrollbar">
               {config.distroFeatures.map(feat => (
                 <span
                   key={feat}
-                  className="px-2.5 py-1 rounded bg-[#0d1117] border border-gray-800 text-xs font-mono text-gray-300"
+                  className="px-2 py-0.5 rounded-[4px] bg-[var(--bg-tertiary)] border border-[var(--border)] text-[11px] font-mono text-[var(--text-primary)]"
                 >
                   {feat}
                 </span>
               ))}
             </div>
-            {config.imageFeatures && config.imageFeatures.length > 0 && (
-              <div className="pt-3 border-t border-gray-800">
-                <div className="text-xs font-semibold text-gray-400 mb-2 uppercase tracking-wider">IMAGE_FEATURES:</div>
-                <div className="flex flex-wrap gap-1.5">
-                  {config.imageFeatures.map(feat => (
-                    <span
-                      key={feat}
-                      className="px-2 py-0.5 rounded bg-[#0d1117] border border-gray-800 text-[11px] font-mono text-teal-300"
-                    >
-                      {feat}
-                    </span>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
         </div>
       )}
     </header>
   );
 };
-

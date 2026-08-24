@@ -1,4 +1,4 @@
-import React, { useState, useRef, useMemo } from 'react';
+import React, { useState, useRef, useMemo, useEffect } from 'react';
 import { YoctoBuildConfig, YoctoLayer } from './types';
 import { scanYoctoDirectory, ScanProgressCallback } from './utils/fileSystemScanner';
 import { DEMO_YOCTO_PROJECT } from './data/demoProject';
@@ -15,6 +15,15 @@ import { BuildEstimator } from './components/BuildEstimator';
 import { EmptyState } from './components/EmptyState';
 
 export default function App() {
+  const [theme, setTheme] = useState<'dark' | 'light'>(() => {
+    return localStorage.getItem('yocto-theme') as 'dark' | 'light' || 'dark';
+  });
+
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', theme === 'dark');
+    localStorage.setItem('yocto-theme', theme);
+  }, [theme]);
+
   const [config, setConfig] = useState<YoctoBuildConfig | null>(null);
   const [activeTab, setActiveTab] = useState<'graph' | 'conflicts' | 'package-tracer' | 'bbappends' | 'estimator'>('graph');
   const [layoutMode, setLayoutMode] = useState<'tree' | 'force'>('tree');
@@ -155,9 +164,11 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[#0d1117] text-[#c9d1d9] font-sans antialiased overflow-hidden select-none">
+    <div className="flex flex-col h-screen w-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans antialiased overflow-hidden select-none">
       {/* Header Bar */}
       <HeaderBar
+        theme={theme}
+        setTheme={setTheme}
         config={config}
         activeTab={activeTab}
         onTabChange={setActiveTab}

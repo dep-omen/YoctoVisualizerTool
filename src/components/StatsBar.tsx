@@ -1,129 +1,92 @@
 import React from 'react';
 import { YoctoBuildConfig } from '../types';
 import { Search } from 'lucide-react';
-import { isStandardKnownRelease } from '../utils/yoctoParser';
 
 interface StatsBarProps {
-  config: YoctoBuildConfig;
+  config: YoctoBuildConfig | null;
   searchFilter: string;
   onSearchChange: (val: string) => void;
 }
 
 export const StatsBar: React.FC<StatsBarProps> = ({
-  config,
-  searchFilter,
-  onSearchChange
+  config, searchFilter, onSearchChange
 }) => {
-  const { stats } = config;
+  if (!config) return null;
+
+  const bblayersCount = config.layers.filter(l => l.source === 'bblayers.conf').length;
+  const autoCount = config.layers.filter(l => l.source === 'auto-discovered').length;
+  
+  const coreCount = config.layers.filter(l => l.category === 'core').length;
+  const oeCount = config.layers.filter(l => l.category === 'openembedded').length;
+  const bspCount = config.layers.filter(l => l.category === 'bsp').length;
+  const customCount = config.layers.filter(l => l.category === 'custom').length;
 
   return (
-    <div
-      id="yocto-stats-bar"
-      className="h-10 bg-[#0d1117] border-b border-gray-800 flex items-center px-4 justify-between gap-4 text-[11px] text-gray-400 shrink-0 select-none uppercase tracking-wider"
-    >
-      {/* Stats indicators matching design specification */}
-      <div className="flex items-center gap-4 sm:gap-6 overflow-x-auto custom-scrollbar whitespace-nowrap">
-        {/* Layers */}
-        <div className="flex items-center gap-1.5" title="Total active layers configured">
-          <span className="text-blue-500 text-xs">●</span>
-          <span>Layers:</span>
-          <span className="text-white font-mono font-semibold">
-            {stats.activeLayers}
-            {stats.missingLayers > 0 && (
-              <span className="text-red-400 font-normal text-[10px] ml-1 lowercase">
-                ({stats.missingLayers} missing)
-              </span>
-            )}
-            {stats.ghostLayers > 0 && (
-              <span className="text-gray-500 font-normal text-[10px] ml-1 lowercase">
-                (+{stats.ghostLayers} unmet)
-              </span>
-            )}
-          </span>
-          {config.discoveryMode === 'fallback' ? (
-            <span id="mode-badge-auto" className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-tight bg-amber-500/20 text-amber-300 border border-amber-500/40">
-              AUTO-DISCOVERED
+    <div className="h-[32px] bg-[var(--bg-primary)] border-b border-[var(--border)] flex items-center justify-between px-4 shrink-0">
+      
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-1 text-[11px]">
+          <span className="text-[var(--text-muted)]">LAYERS:</span>
+          <span className="text-[var(--text-primary)] font-medium">{config.layers.length}</span>
+        </div>
+        <span className="text-[var(--border-strong)]">·</span>
+        
+        <div className="flex items-center gap-1 text-[11px]">
+          <span className="w-2 h-2 rounded-full bg-[var(--node-core)]" />
+          <span className="text-[var(--text-muted)]">CORE:</span>
+          <span className="text-[var(--text-primary)] font-medium">{coreCount}</span>
+        </div>
+        <span className="text-[var(--border-strong)]">·</span>
+        
+        <div className="flex items-center gap-1 text-[11px]">
+          <span className="w-2 h-2 rounded-full bg-[var(--node-oe)]" />
+          <span className="text-[var(--text-muted)]">OE:</span>
+          <span className="text-[var(--text-primary)] font-medium">{oeCount}</span>
+        </div>
+        <span className="text-[var(--border-strong)]">·</span>
+        
+        <div className="flex items-center gap-1 text-[11px]">
+          <span className="w-2 h-2 rounded-full bg-[var(--node-bsp)]" />
+          <span className="text-[var(--text-muted)]">BSP:</span>
+          <span className="text-[var(--text-primary)] font-medium">{bspCount}</span>
+        </div>
+        <span className="text-[var(--border-strong)]">·</span>
+        
+        <div className="flex items-center gap-1 text-[11px]">
+          <span className="w-2 h-2 rounded-full bg-[var(--node-custom)]" />
+          <span className="text-[var(--text-muted)]">CUSTOM:</span>
+          <span className="text-[var(--text-primary)] font-medium">{customCount}</span>
+        </div>
+      </div>
+      
+      <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {bblayersCount > 0 && (
+            <span className="px-[4px] py-[2px] bg-[var(--success-bg)] text-[var(--success)] text-[11px] rounded-[4px] font-medium uppercase">
+              {bblayersCount} FROM BBLAYERS.CONF
             </span>
-          ) : (
-            <span id="mode-badge-bblayers" className="ml-1 px-1.5 py-0.5 rounded text-[9px] font-bold tracking-tight bg-green-500/20 text-green-300 border border-green-500/40">
-              FROM BBLAYERS.CONF
+          )}
+          {autoCount > 0 && (
+            <span className="px-[4px] py-[2px] bg-[var(--warning-bg)] text-[var(--warning)] text-[11px] rounded-[4px] font-medium uppercase">
+              {autoCount} AUTO-DISCOVERED
             </span>
           )}
         </div>
-
-        {/* Recipes */}
-        <div className="flex items-center gap-1.5" title="Total parsed .bb recipes across all active layers">
-          <span className="text-teal-500 text-xs">●</span>
-          <span>Recipes:</span>
-          <span className="text-white font-mono font-semibold">
-            {stats.totalRecipes.toLocaleString()}
-          </span>
+        
+        <div className="h-4 w-[1px] bg-[var(--border)]" />
+        
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[var(--text-muted)]" />
+          <input
+            type="text"
+            placeholder="Filter layers..."
+            value={searchFilter}
+            onChange={(e) => onSearchChange(e.target.value)}
+            className="h-[24px] w-48 pl-7 pr-2 bg-[var(--bg-primary)] border border-[var(--border)] focus:border-[var(--accent)] rounded-[6px] text-[13px] text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none transition-colors"
+          />
         </div>
-
-        {/* BBAppends */}
-        <div className="flex items-center gap-1.5" title="Total parsed .bbappend recipe overrides">
-          <span className="text-amber-500 text-xs">●</span>
-          <span>BBAppends:</span>
-          <span className="text-white font-mono font-semibold">
-            {stats.totalBbappends.toLocaleString()}
-          </span>
-        </div>
-
-        {/* Dependencies */}
-        <div className="flex items-center gap-1.5" title="Total LAYERDEPENDS relationship edges">
-          <span className="text-purple-500 text-xs">●</span>
-          <span>Dependencies:</span>
-          <span className="text-white font-mono font-semibold">
-            {stats.totalDependencies}
-          </span>
-        </div>
-
-        {/* Release Pill */}
-        <div className="hidden lg:flex items-center gap-1.5" title="Detected Yocto Project Release Compatibility">
-          <span className="text-gray-500">RELEASE:</span>
-          <span className="text-white font-mono font-semibold flex items-center gap-1">
-            {stats.primaryRelease || config.activeYoctoRelease || 'Custom'}
-            {(stats.primaryRelease || config.activeYoctoRelease) &&
-              !isStandardKnownRelease(stats.primaryRelease || config.activeYoctoRelease || '') && (
-                <span className="text-[9px] px-1.5 py-0.2 rounded bg-purple-900/40 text-purple-300 border border-purple-500/30 normal-case tracking-normal">
-                  (unreleased/future)
-                </span>
-              )}
-          </span>
-        </div>
-
-        {/* OEROOT Debug Indicator */}
-        {config.oeRoot && (
-          <div className="hidden md:flex items-center gap-1.5" title={`Resolved OEROOT: ${config.oeRoot}`}>
-            <span className="text-gray-500">OEROOT:</span>
-            <span id="stat-oeroot" className="text-blue-400 font-mono font-semibold truncate max-w-[220px]">
-              {config.oeRoot}
-            </span>
-          </div>
-        )}
       </div>
-
-      {/* Live Graph Search / Filter Input */}
-      <div className="relative w-44 sm:w-60 shrink-0">
-        <Search className="w-3 h-3 absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-500" />
-        <input
-          type="text"
-          id="graph-search-input"
-          placeholder="Filter layers & recipes..."
-          value={searchFilter}
-          onChange={e => onSearchChange(e.target.value)}
-          className="w-full pl-8 pr-7 py-1 text-xs bg-[#161b22] border border-gray-700 rounded text-gray-200 placeholder-gray-500 focus:outline-none focus:border-blue-500 transition normal-case tracking-normal"
-        />
-        {searchFilter && (
-          <button
-            onClick={() => onSearchChange('')}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-xs text-gray-400 hover:text-white"
-          >
-            ×
-          </button>
-        )}
-      </div>
+      
     </div>
   );
 };
-

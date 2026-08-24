@@ -1,32 +1,88 @@
 @import "tailwindcss";
 
 @layer base {
-  body {
-    background-color: #0d1117;
-    color: #c9d1d9;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans", Helvetica, Arial, sans-serif;
+  :root {
+    --bg-primary: #f8fafc;
+    --bg-secondary: #ffffff;
+    --bg-tertiary: #f1f5f9;
+    --bg-panel: #ffffff;
+    --border: #e2e8f0;
+    --border-strong: #cbd5e1;
+    --text-primary: #0f172a;
+    --text-secondary: #475569;
+    --text-muted: #94a3b8;
+    --accent: #38bdf8;
+    --accent-hover: #0ea5e9;
+    --accent-bg: #e0f2fe;
+    --accent-text: #0369a1;
+    --success: #22c55e;
+    --success-bg: #dcfce7;
+    --warning: #f59e0b;
+    --warning-bg: #fef3c7;
+    --danger: #ef4444;
+    --danger-bg: #fee2e2;
+    --node-core: #38bdf8;
+    --node-oe: #34d399;
+    --node-bsp: #fbbf24;
+    --node-custom: #a78bfa;
+    --node-ghost: #475569;
   }
 
+  .dark {
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #1e293b;
+    --bg-panel: #1e293b;
+    --border: #334155;
+    --border-strong: #475569;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --accent: #38bdf8;
+    --accent-hover: #7dd3fc;
+    --accent-bg: #0c4a6e;
+    --accent-text: #7dd3fc;
+    --success: #4ade80;
+    --success-bg: #14532d;
+    --warning: #fbbf24;
+    --warning-bg: #78350f;
+    --danger: #f87171;
+    --danger-bg: #7f1d1d;
+    --node-core: #38bdf8;
+    --node-oe: #34d399;
+    --node-bsp: #fbbf24;
+    --node-custom: #a78bfa;
+    --node-ghost: #64748b;
+  }
+
+  body {
+    background-color: var(--bg-primary);
+    color: var(--text-primary);
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-size: 13px;
+    transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+  }
+  
   code, pre, .font-mono {
     font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   }
 }
 
-/* Dark mode custom scrollbars */
+/* Custom scrollbars */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
   height: 6px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #0d1117;
+  background: var(--border);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #30363d;
+  background: var(--border-strong);
   border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #484f58;
+  background: var(--text-muted);
 }
