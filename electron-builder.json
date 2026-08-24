@@ -1,0 +1,33 @@
+{
+  "appId": "org.yoctoproject.layer-visualizer",
+  "productName": "Yocto Layer Visualizer",
+  "copyright": "Copyright © 2026",
+  "directories": {
+    "output": "release"
+  },
+  "files": [
+    "dist/**/*",
+    "electron/**/*"
+  ],
+  "linux": {
+    "target": [
+      "AppImage",
+      "deb"
+    ],
+    "category": "Development",
+    "synopsis": "Interactive Yocto build and layer dependency visualizer"
+  },
+  "mac": {
+    "target": [
+      "dmg",
+      "zip"
+    ],
+    "category": "public.app-category.developer-tools"
+  },
+  "win": {
+    "target": [
+      "nsis",
+      "portable"
+    ]
+  }
+}
