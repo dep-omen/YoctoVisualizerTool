@@ -234,12 +234,12 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
         <div className="bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg p-6">
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-lg font-bold text-[var(--text-primary)] flex items-center gap-2">
-              <Server className="w-5 h-5 text-blue-400" />
+              <Server className="w-5 h-5 text-[var(--text-code-blue)]" />
               Machine Profile
             </h2>
             <button 
               onClick={handleDetect}
-              className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 border border-[var(--border)] rounded text-[var(--text-primary)] transition"
+              className="text-xs flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] hover:bg-[var(--border-strong)] border border-[var(--border)] rounded text-[var(--text-primary)] transition"
             >
               <Cpu className="w-3.5 h-3.5" />
               Detect from system
@@ -305,7 +305,7 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                  </div>
                  <div className="flex items-end gap-6">
                     <div>
-                       <div className={`text-4xl font-bold ${est.coldTotal > 360 ? 'text-red-400' : est.coldTotal > 120 ? 'text-amber-400' : 'text-green-400'}`}>
+                       <div className={`text-4xl font-bold ${est.coldTotal > 360 ? 'text-[var(--text-code-red)]' : est.coldTotal > 120 ? 'text-[var(--text-code-amber)]' : 'text-green-400'}`}>
                          {formatTime(est.coldTotal)}
                        </div>
                        <div className="text-xs font-semibold mt-1 opacity-70">Cold build</div>
@@ -358,7 +358,7 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
               </div>
             </div>
 
-            <div className="text-center text-[10px] text-[var(--text-muted)] italic mt-2">
+            <div className="text-[var(--text-primary)]enter text-[10px] text-[var(--text-muted)] italic mt-2">
               Estimates are based on recipe count and category weights. Actual build times vary significantly based on recipe complexity, network conditions, and compiler optimization flags. Cold build estimates assume no sstate-cache. Use these numbers for planning only.
             </div>
 
@@ -371,10 +371,10 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                  {/* Layer Contribution Chart */}
                  <div className="bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg p-5">
                     <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                      <Layers className="w-4 h-4 text-blue-400" />
+                      <Layers className="w-4 h-4 text-[var(--text-code-blue)]" />
                       Layer Contribution
                     </h3>
-                    <div className="flex h-6 rounded-full overflow-hidden bg-gray-800 w-full mb-4">
+                    <div className="flex h-6 rounded-full overflow-hidden bg-[var(--bg-tertiary)] w-full mb-4">
                       {est.layerContributions.map(l => (
                         <div key={l.name} className={`h-full ${est.layerColors[l.name] || 'bg-gray-500'}`} style={{ width: `${l.percent}%` }} title={`${l.name}: ${l.percent.toFixed(1)}%`} />
                       ))}
@@ -394,7 +394,7 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                  <div className="bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg overflow-hidden flex flex-col max-h-[400px]">
                     <div className="p-4 border-b border-[var(--border)] flex items-center justify-between bg-[var(--bg-primary)]">
                       <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
-                        <Database className="w-4 h-4 text-amber-400" />
+                        <Database className="w-4 h-4 text-[var(--text-code-amber)]" />
                         Heaviest Recipes (Top 20)
                       </h3>
                     </div>
@@ -406,18 +406,18 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                             <th className="px-4 py-2 font-semibold">Layer</th>
                             <th className="px-4 py-2 font-semibold">Category</th>
                             <th className="px-4 py-2 font-semibold text-right">Compile Time</th>
-                            <th className="px-4 py-2 font-semibold text-center">Parallel</th>
+                            <th className="px-4 py-2 font-semibold text-[var(--text-primary)]enter">Parallel</th>
                           </tr>
                         </thead>
                         <tbody className="text-xs">
                           {est.weights.map((w, i) => (
-                            <tr key={i} className="border-b border-[var(--border)]/50 hover:bg-gray-800/30">
+                            <tr key={i} className="border-b border-[var(--border)]/50 hover:bg-[var(--bg-tertiary)]">
                               <td className="px-4 py-2 font-mono text-[var(--text-primary)]">{w.name}</td>
                               <td className="px-4 py-2 text-[var(--text-muted)]">{w.layer}</td>
                               <td className="px-4 py-2 text-[var(--text-muted)]">{w.category}</td>
-                              <td className="px-4 py-2 text-right font-mono text-amber-400">{w.compileTime}m base</td>
-                              <td className="px-4 py-2 text-center">
-                                {w.parallelizable ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500 mx-auto" /> : <AlertCircle className="w-3.5 h-3.5 text-red-400 mx-auto" />}
+                              <td className="px-4 py-2 text-right font-mono text-[var(--text-code-amber)]">{w.compileTime}m base</td>
+                              <td className="px-4 py-2 text-[var(--text-primary)]enter">
+                                {w.parallelizable ? <CheckCircle2 className="w-3.5 h-3.5 text-green-500 mx-auto" /> : <AlertCircle className="w-3.5 h-3.5 text-[var(--text-code-red)] mx-auto" />}
                               </td>
                             </tr>
                           ))}
@@ -432,7 +432,7 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                  <div className="flex justify-end">
                    <button 
                      onClick={handleExport}
-                     className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-[var(--text-primary)] text-xs font-semibold rounded border border-[var(--border)] transition"
+                     className="flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] hover:bg-[var(--border-strong)] text-[var(--text-primary)] text-xs font-semibold rounded border border-[var(--border)] transition"
                    >
                      <Download className="w-3.5 h-3.5" /> Export Report
                    </button>
@@ -440,17 +440,17 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                  
                  <div className="bg-[var(--bg-panel)] border border-[var(--border)] rounded-lg p-5">
                     <h3 className="text-sm font-bold text-[var(--text-primary)] mb-4 flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-amber-400" />
+                      <Zap className="w-4 h-4 text-[var(--text-code-amber)]" />
                       Recommendations
                     </h3>
                     <div className="space-y-3">
                       {recommendations.map((r, i) => (
                         <div key={i} className={`p-3 rounded border ${r.type === 'critical' ? 'bg-red-900/20 border-red-500/30' : r.type === 'warning' ? 'bg-amber-900/20 border-amber-500/30' : 'bg-blue-900/20 border-blue-500/30'}`}>
                           <div className="flex items-start gap-2 mb-1.5">
-                            {r.type === 'critical' && <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />}
-                            {r.type === 'warning' && <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />}
-                            {r.type === 'info' && <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />}
-                            <div className={`text-xs font-bold ${r.type === 'critical' ? 'text-red-400' : r.type === 'warning' ? 'text-amber-400' : 'text-blue-400'}`}>
+                            {r.type === 'critical' && <AlertCircle className="w-4 h-4 text-[var(--text-code-red)] shrink-0 mt-0.5" />}
+                            {r.type === 'warning' && <AlertCircle className="w-4 h-4 text-[var(--text-code-amber)] shrink-0 mt-0.5" />}
+                            {r.type === 'info' && <Info className="w-4 h-4 text-[var(--text-code-blue)] shrink-0 mt-0.5" />}
+                            <div className={`text-xs font-bold ${r.type === 'critical' ? 'text-[var(--text-code-red)]' : r.type === 'warning' ? 'text-[var(--text-code-amber)]' : 'text-[var(--text-code-blue)]'}`}>
                               {r.title}
                             </div>
                           </div>
@@ -471,7 +471,7 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                         <Copy className="w-3.5 h-3.5" />
                       </button>
                     </div>
-                    <pre className="text-[10px] font-mono bg-[#090c10] border border-[var(--border)] p-3 rounded text-blue-300 overflow-x-auto whitespace-pre-wrap">
+                    <pre className="text-[10px] font-mono bg-[var(--bg-secondary)] border border-[var(--border)] p-3 rounded text-[var(--text-code-blue)] overflow-x-auto whitespace-pre-wrap">
                       {`# Build performance settings — generated\nBB_NUMBER_THREADS = "${cores}"\nPARALLEL_MAKE = "-j ${cores}"\nSSTATE_DIR = "\${TOPDIR}/../sstate-cache"\nDL_DIR = "\${TOPDIR}/../downloads"\n\n# Uncomment to enable build history\n# INHERIT += "buildhistory"\n# BUILDHISTORY_COMMIT = "1"`}
                     </pre>
                  </div>

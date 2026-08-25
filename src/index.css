@@ -86,3 +86,21 @@
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: var(--text-muted);
 }
+
+@layer base {
+  :root {
+    --text-code-blue: #2563eb; /* blue-600 */
+    --text-code-amber: #d97706; /* amber-600 */
+    --text-code-purple: #9333ea; /* purple-600 */
+    --text-code-red: #dc2626; /* red-600 */
+    --text-code-green: #16a34a; /* green-600 */
+  }
+
+  .dark {
+    --text-code-blue: #93c5fd; /* blue-300 */
+    --text-code-amber: #fcd34d; /* amber-300 */
+    --text-code-purple: #d8b4fe; /* purple-300 */
+    --text-code-red: #fca5a5; /* red-300 */
+    --text-code-green: #86efac; /* green-300 */
+  }
+}

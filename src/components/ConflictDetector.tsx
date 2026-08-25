@@ -140,11 +140,11 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
             <div>
               <div className="flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-blue-400" />
-                <h2 className="text-lg font-bold text-white tracking-tight">BitBake Conflict & Override Detector</h2>
+                <ShieldCheck className="w-5 h-5 text-[var(--text-code-blue)]" />
+                <h2 className="text-lg font-bold text-[var(--text-primary)] tracking-tight">BitBake Conflict & Override Detector</h2>
               </div>
               <p className="text-xs text-[var(--text-muted)] mt-0.5">
-                Analyzes duplicate <code className="text-blue-300 font-mono">.bb</code> recipe collisions and unreferenced <code className="text-purple-300 font-mono">.bbappend</code> orphans across all active layers based on <code className="text-amber-300 font-mono">BBFILE_PRIORITY</code>.
+                Analyzes duplicate <code className="text-[var(--text-code-blue)] font-mono">.bb</code> recipe collisions and unreferenced <code className="text-[var(--text-code-purple)] font-mono">.bbappend</code> orphans across all active layers based on <code className="text-[var(--text-code-amber)] font-mono">BBFILE_PRIORITY</code>.
               </p>
             </div>
             {stats.totalConflicts === 0 && stats.orphanBbappends === 0 && (
@@ -160,17 +160,17 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
             {/* 1. Recipe Collisions */}
             <div className="p-3 bg-[var(--bg-primary)] border border-amber-500/30 rounded-xl flex items-center gap-3 relative overflow-hidden">
               <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/30 flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-4 h-4 text-amber-400" />
+                <AlertTriangle className="w-4 h-4 text-[var(--text-code-amber)]" />
               </div>
               <div>
-                <div className="text-[11px] font-medium text-amber-300/80 uppercase tracking-wider">Conflicts</div>
-                <div className="text-xl font-bold font-mono text-amber-400">{stats.totalConflicts}</div>
+                <div className="text-[11px] font-medium text-[var(--text-code-amber)]/80 uppercase tracking-wider">Conflicts</div>
+                <div className="text-xl font-bold font-mono text-[var(--text-code-amber)]">{stats.totalConflicts}</div>
               </div>
             </div>
 
             {/* 2. Silent Overrides */}
             <div className="p-3 bg-[var(--bg-primary)] border border-[var(--border)] rounded-xl flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-gray-800 border border-[var(--border)] flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-[var(--bg-tertiary)] border border-[var(--border)] flex items-center justify-center shrink-0">
                 <Layers className="w-4 h-4 text-[var(--text-muted)]" />
               </div>
               <div>
@@ -184,13 +184,13 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
               stats.criticalConflicts > 0 ? 'border-red-500/60 bg-red-950/20 animate-pulse' : 'border-[var(--border)]'
             }`}>
               <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                stats.criticalConflicts > 0 ? 'bg-red-500/20 border border-red-500 text-red-400' : 'bg-gray-800 border border-[var(--border)] text-[var(--text-muted)]'
+                stats.criticalConflicts > 0 ? 'bg-red-500/20 border border-red-500 text-[var(--text-code-red)]' : 'bg-[var(--bg-tertiary)] border border-[var(--border)] text-[var(--text-muted)]'
               }`}>
                 <AlertOctagon className="w-4 h-4" />
               </div>
               <div>
-                <div className="text-[11px] font-medium text-red-400 uppercase tracking-wider">Critical Conflicts</div>
-                <div className="text-xl font-bold font-mono text-red-400">{stats.criticalConflicts}</div>
+                <div className="text-[11px] font-medium text-[var(--text-code-red)] uppercase tracking-wider">Critical Conflicts</div>
+                <div className="text-xl font-bold font-mono text-[var(--text-code-red)]">{stats.criticalConflicts}</div>
               </div>
             </div>
 
@@ -200,8 +200,8 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                 <FileQuestion className="w-4 h-4 text-purple-400" />
               </div>
               <div>
-                <div className="text-[11px] font-medium text-purple-300 uppercase tracking-wider">Orphan bbappends</div>
-                <div className="text-xl font-bold font-mono text-purple-300">{stats.orphanBbappends}</div>
+                <div className="text-[11px] font-medium text-[var(--text-code-purple)] uppercase tracking-wider">Orphan bbappends</div>
+                <div className="text-xl font-bold font-mono text-[var(--text-code-purple)]">{stats.orphanBbappends}</div>
               </div>
             </div>
           </div>
@@ -220,12 +220,12 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Filter by recipe name or layer..."
-              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] text-xs text-white pl-9 pr-3 py-2 rounded-lg focus:outline-none focus:border-blue-500 transition font-mono placeholder:text-[var(--text-muted)]"
+              className="w-full bg-[var(--bg-primary)] border border-[var(--border)] text-xs text-[var(--text-primary)] pl-9 pr-3 py-2 rounded-lg focus:outline-none focus:border-blue-500 transition font-mono placeholder:text-[var(--text-muted)]"
             />
             {searchQuery && (
               <button
                 onClick={() => setSearchQuery('')}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-white text-xs px-1"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)] hover:text-[var(--text-primary)] text-xs px-1"
               >
                 ✕
               </button>
@@ -242,7 +242,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
               className={`px-3 py-1.5 rounded-lg font-medium transition ${
                 activeFilter === 'ALL'
                   ? 'bg-blue-600 text-white '
-                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-muted)] hover:text-white hover:bg-gray-800'
+                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-muted)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-tertiary)]'
               }`}
             >
               ALL ({conflicts.length})
@@ -252,7 +252,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
               className={`px-3 py-1.5 rounded-lg font-medium transition flex items-center gap-1.5 ${
                 activeFilter === 'CRITICAL'
                   ? 'bg-red-600 text-white'
-                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-red-400 hover:bg-red-950/40'
+                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-code-red)] hover:bg-red-950/40'
               }`}
             >
               <span className="w-2 h-2 rounded-full bg-red-400"></span>
@@ -263,7 +263,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
               className={`px-3 py-1.5 rounded-lg font-medium transition ${
                 activeFilter === 'VERSION BUMP'
                   ? 'bg-blue-600 text-white'
-                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-blue-400 hover:bg-blue-950/40'
+                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-code-blue)] hover:bg-blue-950/40'
               }`}
             >
               VERSION BUMP ({conflicts.filter(c => c.type === 'VERSION BUMP').length})
@@ -273,7 +273,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
               className={`px-3 py-1.5 rounded-lg font-medium transition ${
                 activeFilter === 'FORK'
                   ? 'bg-amber-600 text-white'
-                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-amber-400 hover:bg-amber-950/40'
+                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-code-amber)] hover:bg-amber-950/40'
               }`}
             >
               FORK ({conflicts.filter(c => c.type === 'FORK').length})
@@ -283,7 +283,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
               className={`px-3 py-1.5 rounded-lg font-medium transition ${
                 activeFilter === 'ORPHANS'
                   ? 'bg-purple-600 text-white'
-                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-purple-300 hover:bg-purple-950/40'
+                  : 'bg-[var(--bg-primary)] border border-[var(--border)] text-[var(--text-code-purple)] hover:bg-purple-950/40'
               }`}
             >
               ORPHANS ({stats.orphanBbappends})
@@ -300,7 +300,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                   <tr className="border-b border-[var(--border)] bg-[var(--bg-tertiary)] text-[var(--text-muted)] uppercase tracking-wider font-semibold text-[10px]">
                     <th className="py-3 px-4 w-8"></th>
                     <th
-                      className="py-3 px-4 cursor-pointer hover:text-white transition select-none"
+                      className="py-3 px-4 cursor-pointer hover:text-[var(--text-primary)] transition select-none"
                       onClick={() => toggleSort('name')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -311,7 +311,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                     <th className="py-3 px-4">Winning Layer</th>
                     <th className="py-3 px-4">Winning Version</th>
                     <th
-                      className="py-3 px-4 cursor-pointer hover:text-white transition select-none"
+                      className="py-3 px-4 cursor-pointer hover:text-[var(--text-primary)] transition select-none"
                       onClick={() => toggleSort('priority')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -320,7 +320,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                       </div>
                     </th>
                     <th
-                      className="py-3 px-4 cursor-pointer hover:text-white transition select-none"
+                      className="py-3 px-4 cursor-pointer hover:text-[var(--text-primary)] transition select-none"
                       onClick={() => toggleSort('overrides')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -329,7 +329,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                       </div>
                     </th>
                     <th
-                      className="py-3 px-4 cursor-pointer hover:text-white transition select-none"
+                      className="py-3 px-4 cursor-pointer hover:text-[var(--text-primary)] transition select-none"
                       onClick={() => toggleSort('type')}
                     >
                       <div className="flex items-center gap-1.5">
@@ -342,7 +342,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                 <tbody className="divide-y divide-gray-800/60 font-sans">
                   {sortedConflicts.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-12 text-center text-[var(--text-muted)]">
+                      <td colSpan={7} className="py-12 text-[var(--text-primary)]enter text-[var(--text-muted)]">
                         <div className="flex flex-col items-center justify-center gap-2">
                           <CheckCircle2 className="w-8 h-8 text-green-500" />
                           <span className="text-sm font-semibold text-[var(--text-primary)]">
@@ -361,22 +361,22 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                             onClick={() => toggleRowExpand(item.id)}
                             className={`cursor-pointer transition-colors ${
                               isExpanded
-                                ? 'bg-gray-800/40'
-                                : 'hover:bg-[#1f242c]/70'
+                                ? 'bg-[var(--bg-tertiary)]'
+                                : 'hover:bg-[var(--bg-tertiary)]'
                             } ${item.isCritical ? 'bg-red-950/10' : ''}`}
                           >
                             {/* Expand Chevron */}
-                            <td className="py-3.5 px-3 text-center text-[var(--text-muted)]">
+                            <td className="py-3.5 px-3 text-[var(--text-primary)]enter text-[var(--text-muted)]">
                               {isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-blue-400" />
+                                <ChevronDown className="w-4 h-4 text-[var(--text-code-blue)]" />
                               ) : (
                                 <ChevronRight className="w-4 h-4 text-[var(--text-muted)] group-hover:text-[var(--text-primary)]" />
                               )}
                             </td>
 
                             {/* Recipe Name */}
-                            <td className="py-3.5 px-4 font-mono font-bold text-white">
-                              <span className="text-blue-300 hover:underline">{item.recipeName}</span>
+                            <td className="py-3.5 px-4 font-mono font-bold text-[var(--text-primary)]">
+                              <span className="text-[var(--text-code-blue)] hover:underline">{item.recipeName}</span>
                             </td>
 
                             {/* Winning Layer */}
@@ -400,7 +400,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
 
                             {/* Winning Priority */}
                             <td className="py-3.5 px-4 font-mono font-semibold text-[var(--text-primary)]">
-                              <span className="px-2 py-0.5 rounded bg-gray-800 text-[var(--text-primary)] border border-[var(--border)]">
+                              <span className="px-2 py-0.5 rounded bg-[var(--bg-tertiary)] text-[var(--text-primary)] border border-[var(--border)]">
                                 {item.winningPriority}
                               </span>
                             </td>
@@ -432,17 +432,17 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                             <td className="py-3.5 px-4">
                               {item.type === 'CRITICAL' && (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-red-950/90 border border-red-500 text-red-300 font-bold text-[10px] uppercase tracking-wider animate-pulse  -red-500/20">
-                                  <AlertOctagon className="w-3 h-3 text-red-400" />
+                                  <AlertOctagon className="w-3 h-3 text-[var(--text-code-red)]" />
                                   CRITICAL
                                 </span>
                               )}
                               {item.type === 'VERSION BUMP' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-950/70 border border-blue-600/70 text-blue-300 font-semibold text-[10px] uppercase tracking-wider">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-blue-950/70 border border-blue-600/70 text-[var(--text-code-blue)] font-semibold text-[10px] uppercase tracking-wider">
                                   VERSION BUMP
                                 </span>
                               )}
                               {item.type === 'FORK' && (
-                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-950/70 border border-amber-600/70 text-amber-300 font-semibold text-[10px] uppercase tracking-wider">
+                                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-amber-950/70 border border-amber-600/70 text-[var(--text-code-amber)] font-semibold text-[10px] uppercase tracking-wider">
                                   FORK
                                 </span>
                               )}
@@ -459,9 +459,9 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                                     ? 'bg-red-950/30 border-red-800/60 text-red-200'
                                     : 'bg-blue-950/20 border-blue-800/40 text-blue-200'
                                 }`}>
-                                  <Info className={`w-4 h-4 shrink-0 mt-0.5 ${item.isCritical ? 'text-red-400' : 'text-blue-400'}`} />
+                                  <Info className={`w-4 h-4 shrink-0 mt-0.5 ${item.isCritical ? 'text-[var(--text-code-red)]' : 'text-[var(--text-code-blue)]'}`} />
                                   <div className="text-xs space-y-1">
-                                    <div className="font-semibold text-white">
+                                    <div className="font-semibold text-[var(--text-primary)]">
                                       {item.isCritical ? 'Undefined BitBake Behavior Detected' : 'BitBake Priority Resolution Note'}
                                     </div>
                                     <p className="leading-relaxed opacity-90">{item.explanation}</p>
@@ -481,7 +481,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                                         PRIORITY {item.winningPriority}
                                       </span>
                                     </div>
-                                    <div className="text-white font-semibold flex items-center gap-1.5">
+                                    <div className="text-[var(--text-primary)] font-semibold flex items-center gap-1.5">
                                       <FileCode className="w-3.5 h-3.5 text-emerald-400" />
                                       {item.winningFilename}
                                     </div>
@@ -489,7 +489,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                                       <span className="truncate">{item.winningPath}</span>
                                       <button
                                         onClick={(e) => handleCopyPath(item.winningPath, e)}
-                                        className="shrink-0 p-1 hover:bg-gray-700 rounded text-[var(--text-muted)] hover:text-white transition"
+                                        className="shrink-0 p-1 hover:bg-[var(--border-strong)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
                                         title="Copy full path"
                                       >
                                         {copiedPath === item.winningPath ? (
@@ -528,7 +528,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                                           <span className="truncate">{loser.path}</span>
                                           <button
                                             onClick={(e) => handleCopyPath(loser.path, e)}
-                                            className="shrink-0 p-1 hover:bg-gray-700 rounded text-[var(--text-muted)] hover:text-white transition"
+                                            className="shrink-0 p-1 hover:bg-[var(--border-strong)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
                                             title="Copy full path"
                                           >
                                             {copiedPath === loser.path ? (
@@ -570,10 +570,10 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-white tracking-tight">
+                  <h3 className="text-sm font-bold text-[var(--text-primary)] tracking-tight">
                     Orphan .bbappend Files
                   </h3>
-                  <span className="px-2 py-0.5 rounded-full bg-purple-950 border border-purple-800 text-purple-300 font-mono text-[10px] font-bold">
+                  <span className="px-2 py-0.5 rounded-full bg-purple-950 border border-purple-800 text-[var(--text-code-purple)] font-mono text-[10px] font-bold">
                     {filteredOrphans.length}
                   </span>
                 </div>
@@ -604,7 +604,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                 <tbody className="divide-y divide-gray-800/60 font-sans">
                   {filteredOrphans.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-[var(--text-muted)]">
+                      <td colSpan={6} className="py-8 text-[var(--text-primary)]enter text-[var(--text-muted)]">
                         <div className="flex flex-col items-center justify-center gap-1.5">
                           <CheckCircle2 className="w-6 h-6 text-green-500" />
                           <span className="text-xs font-semibold text-[var(--text-primary)]">
@@ -617,15 +617,15 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                   ) : (
                     filteredOrphans.map(orphan => (
                       <tr key={orphan.id} className="hover:bg-[var(--bg-tertiary)] transition-colors">
-                        <td className="py-3.5 px-4 font-mono font-bold text-purple-300">
+                        <td className="py-3.5 px-4 font-mono font-bold text-[var(--text-code-purple)]">
                           {orphan.filename}
                         </td>
                         <td className="py-3.5 px-4 font-mono font-semibold text-[var(--text-primary)]">
-                          <span className="px-2 py-0.5 bg-gray-800 rounded border border-[var(--border)] text-[var(--text-primary)] text-[11px]">
+                          <span className="px-2 py-0.5 bg-[var(--bg-tertiary)] rounded border border-[var(--border)] text-[var(--text-primary)] text-[11px]">
                             {orphan.layer.name}
                           </span>
                         </td>
-                        <td className="py-3.5 px-4 font-mono text-amber-300">
+                        <td className="py-3.5 px-4 font-mono text-[var(--text-code-amber)]">
                           <span className="px-2 py-0.5 bg-amber-950/40 border border-amber-800/60 rounded text-[11px]">
                             {orphan.targetRecipe}
                           </span>
@@ -638,7 +638,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                             <span className="truncate">{orphan.fullPath}</span>
                             <button
                               onClick={(e) => handleCopyPath(orphan.fullPath, e)}
-                              className="p-1 hover:bg-gray-800 rounded text-[var(--text-muted)] hover:text-white shrink-0"
+                              className="p-1 hover:bg-[var(--bg-tertiary)] rounded text-[var(--text-muted)] hover:text-[var(--text-primary)] shrink-0"
                               title="Copy path"
                             >
                               {copiedPath === orphan.fullPath ? (
@@ -650,7 +650,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                           </div>
                         </td>
                         <td className="py-3.5 px-4">
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-950/90 border border-purple-600/80 text-purple-300 font-bold text-[10px] uppercase tracking-wider">
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-purple-950/90 border border-purple-600/80 text-[var(--text-code-purple)] font-bold text-[10px] uppercase tracking-wider">
                             <AlertTriangle className="w-3 h-3 text-purple-400" />
                             NO RECIPE FOUND
                           </span>

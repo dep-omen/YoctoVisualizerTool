@@ -801,13 +801,13 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
           id="fallback-discovery-banner"
           className="absolute top-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2.5 bg-amber-950/90 text-amber-200 border border-amber-500/50 px-4 py-2 rounded-lg  text-xs backdrop-blur pointer-events-auto animate-in fade-in slide-in-from-top-2 duration-300"
         >
-          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
+          <AlertTriangle className="w-4 h-4 text-[var(--text-code-amber)] shrink-0" />
           <span className="font-medium">
             No bblayers.conf found — layers auto-discovered from directory scan
           </span>
           <button
             onClick={() => setBannerDismissed(true)}
-            className="ml-2 text-amber-400 hover:text-white p-0.5 rounded hover:bg-amber-900/60 transition"
+            className="ml-2 text-[var(--text-code-amber)] hover:text-[var(--text-primary)] p-0.5 rounded hover:bg-amber-900/60 transition"
             title="Dismiss banner"
           >
             <X className="w-3.5 h-3.5" />
@@ -835,14 +835,14 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
         <span className="flex items-center gap-1.5 font-medium tracking-wide">
           <span className="w-2.5 h-2.5 bg-purple-500 rounded-full inline-block" /> CUSTOM
         </span>
-        <span className="flex items-center gap-1.5 font-medium tracking-wide text-red-400">
+        <span className="flex items-center gap-1.5 font-medium tracking-wide text-[var(--text-code-red)]">
           <span className="w-2.5 h-2.5 bg-red-500 rounded-full inline-block border border-dashed border-red-300" /> UNMET / GHOST
         </span>
-        <span className="flex items-center gap-1.5 font-medium tracking-wide text-cyan-400 border-l border-[var(--border)] pl-3">
+        <span className="flex items-center gap-1.5 font-medium tracking-wide text-[var(--text-primary)]yan-400 border-l border-[var(--border)] pl-3">
           <span className="w-4 h-0 border-t-2 border-dashed border-cyan-400 inline-block" /> DYNAMIC EXTENSION
         </span>
         <span className="hidden md:flex items-center gap-1.5 text-[var(--text-muted)] border-l border-[var(--border)] pl-3">
-          <span>Badge: <strong className="text-[var(--text-primary)] font-mono">r</strong>=recipes, <strong className="text-amber-400 font-mono">a</strong>=bbappends</span>
+          <span>Badge: <strong className="text-[var(--text-primary)] font-mono">r</strong>=recipes, <strong className="text-[var(--text-code-amber)] font-mono">a</strong>=bbappends</span>
         </span>
       </div>
     </div>

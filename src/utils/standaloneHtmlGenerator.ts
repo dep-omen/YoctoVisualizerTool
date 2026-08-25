@@ -584,7 +584,7 @@ export function generateStandaloneHtml(): string {
             : '<span class="badge badge-fork">FORK</span>';
 
           const losersBadges = c.losingLayers.map(l => 
-            \`<span class="badge badge-loser"><span>\${l.layerName}</span>\${l.version ? '<span style="text-decoration: line-through; opacity: 0.8;">v' + l.version + '</span>' : ''}<strong>P:\${l.priority}</strong></span>\`
+            \`<span class="badge badge-loser"><span>\${l.layerName}</span>\${l.version ? '<span style="text-[var(--text-primary)]ecoration: line-through; opacity: 0.8;">v' + l.version + '</span>' : ''}<strong>P:\${l.priority}</strong></span>\`
           ).join(' ');
 
           let row = \`

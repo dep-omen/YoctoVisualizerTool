@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, Menu, shell } = require('electron');
+const { app, BrowserWindow, ipcMain, dialog, Menu, shell, nativeTheme } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const http = require('http');
@@ -63,7 +63,7 @@ function startStaticDistServer(distDir) {
           res.end(`
             <!DOCTYPE html>
             <html>
-              <head><title>Yocto Layer Visualizer</title><style>body{background:#090d16;color:#e2e8f0;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;}</style></head>
+              <head><title>Yocto Layer Visualizer</title><style>body{background:${nativeTheme.shouldUseDarkColors ? '#0f172a' : '#f8fafc'};color:${nativeTheme.shouldUseDarkColors ? '#f1f5f9' : '#0f172a'};font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;}</style></head>
               <body>
                 <div>
                   <h2>Building application assets...</h2>
@@ -139,7 +139,7 @@ async function createWindow() {
     minWidth: 1024,
     minHeight: 700,
     title: 'Yocto Layer Visualizer',
-    backgroundColor: '#090d16',
+    backgroundColor: nativeTheme.shouldUseDarkColors ? '#0f172a' : '#f8fafc',
     show: false,
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),

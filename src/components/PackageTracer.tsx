@@ -334,7 +334,7 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
                   <button
                     key={s}
                     onClick={() => { setSearchQuery(s); setSuggestions([]); }}
-                    className="w-full text-left px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-blue-600/20 hover:text-white"
+                    className="w-full text-left px-4 py-2 text-sm text-[var(--text-primary)] hover:bg-blue-600/20 hover:text-[var(--text-primary)]"
                   >
                     {s}
                   </button>
@@ -345,11 +345,11 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
           <div className="flex items-center justify-between text-xs">
             <div className="flex items-center gap-4">
               <label className="flex items-center gap-1.5 cursor-pointer text-[var(--text-primary)]">
-                <input type="checkbox" checked={showDepends} onChange={e => setShowDepends(e.target.checked)} className="rounded border-[var(--border)] bg-gray-900" />
+                <input type="checkbox" checked={showDepends} onChange={e => setShowDepends(e.target.checked)} className="rounded border-[var(--border)] bg-[var(--bg-secondary)]" />
                 DEPENDS (compile-time)
               </label>
               <label className="flex items-center gap-1.5 cursor-pointer text-[var(--text-primary)]">
-                <input type="checkbox" checked={showRdepends} onChange={e => setShowRdepends(e.target.checked)} className="rounded border-[var(--border)] bg-gray-900" />
+                <input type="checkbox" checked={showRdepends} onChange={e => setShowRdepends(e.target.checked)} className="rounded border-[var(--border)] bg-[var(--bg-secondary)]" />
                 RDEPENDS (runtime)
               </label>
               <select
@@ -383,7 +383,7 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
       )}
 
       {isTracing && (
-        <div className="flex-1 flex flex-col items-center justify-center text-blue-400">
+        <div className="flex-1 flex flex-col items-center justify-center text-[var(--text-code-blue)]">
           <Loader2 className="w-8 h-8 mb-4 animate-spin" />
           <p>{traceStatus || 'Tracing dependencies...'}</p>
         </div>
@@ -397,13 +397,13 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
               <div className="space-y-4">
                 <div className="flex items-start justify-between">
                   <div>
-                    <h2 className="text-xl font-bold text-gray-100 flex items-center gap-2">
+                    <h2 className="text-xl font-bold text-[var(--text-primary)] flex items-center gap-2">
                       {selectedNode.id}
                       {selectedNode.version && <span className="text-sm font-normal text-[var(--text-muted)]">@{selectedNode.version}</span>}
                     </h2>
                     {selectedNode.layer && (
-                      <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-gray-800 rounded text-xs font-mono mt-2">
-                        <Layers className="w-3.5 h-3.5 text-blue-400" />
+                      <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-[var(--bg-tertiary)] rounded text-xs font-mono mt-2">
+                        <Layers className="w-3.5 h-3.5 text-[var(--text-code-blue)]" />
                         <span className="text-[var(--text-primary)]">{selectedNode.layer.name}</span>
                       </div>
                     )}
@@ -412,9 +412,9 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
 
                 {selectedNode.isExternal && (
                   <div className="p-3 bg-red-950/30 border border-red-500/30 rounded-lg flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-red-400 shrink-0 mt-0.5" />
+                    <AlertCircle className="w-5 h-5 text-[var(--text-code-red)] shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-sm font-medium text-red-400">Package not found</h4>
+                      <h4 className="text-sm font-medium text-[var(--text-code-red)]">Package not found</h4>
                       <p className="text-xs text-red-300/70 mt-1">
                         This package could not be found in any of the active layers. It might be provided by a layer you haven't included.
                       </p>
@@ -424,10 +424,10 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
 
                 {selectedNode.conflicts && selectedNode.conflicts.length > 0 && (
                   <div className="p-3 bg-amber-950/30 border border-amber-500/30 rounded-lg flex items-start gap-3">
-                    <AlertCircle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+                    <AlertCircle className="w-5 h-5 text-[var(--text-code-amber)] shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-sm font-medium text-amber-400">Multiple Layers Provide This</h4>
-                      <p className="text-xs text-amber-300/70 mt-1 mb-2">
+                      <h4 className="text-sm font-medium text-[var(--text-code-amber)]">Multiple Layers Provide This</h4>
+                      <p className="text-xs text-[var(--text-code-amber)]/70 mt-1 mb-2">
                         This package is also provided by the following layers, but <strong className="text-amber-200">{selectedNode.layer?.name}</strong> wins due to higher layer priority.
                       </p>
                       <div className="flex flex-wrap gap-1">
@@ -451,7 +451,7 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
                 {selectedNode.license && (
                   <div>
                     <h3 className="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-wider mb-1">License</h3>
-                    <p className="text-sm font-mono text-[var(--text-primary)] bg-gray-800/50 inline-block px-2 py-0.5 rounded">{selectedNode.license}</p>
+                    <p className="text-sm font-mono text-[var(--text-primary)] bg-[var(--bg-tertiary)] inline-block px-2 py-0.5 rounded">{selectedNode.license}</p>
                   </div>
                 )}
                 
@@ -469,11 +469,11 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
                   </h3>
                   <div className="flex flex-wrap gap-1">
                     {selectedNode.depends.map(d => (
-                      <span key={d} className="px-2 py-1 bg-blue-900/20 border border-blue-500/30 rounded text-xs font-mono text-blue-300">
+                      <span key={d} className="px-2 py-1 bg-blue-900/20 border border-blue-500/30 rounded text-xs font-mono text-[var(--text-code-blue)]">
                         {d}
                       </span>
                     ))}
-                    {selectedNode.depends.length === 0 && <span className="text-xs text-gray-600 italic">None</span>}
+                    {selectedNode.depends.length === 0 && <span className="text-xs text-[var(--text-muted)] italic">None</span>}
                   </div>
                 </div>
 
@@ -488,7 +488,7 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
                         {d}
                       </span>
                     ))}
-                    {selectedNode.rdepends.length === 0 && <span className="text-xs text-gray-600 italic">None</span>}
+                    {selectedNode.rdepends.length === 0 && <span className="text-xs text-[var(--text-muted)] italic">None</span>}
                   </div>
                 </div>
 
@@ -501,7 +501,7 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
             {impactSummary && (
               <div className="mt-8 pt-6 border-t border-[var(--border)]">
                 <h3 className="text-sm font-bold text-[var(--text-primary)] mb-3">Rootfs Impact Summary</h3>
-                <p className="text-xs text-[var(--text-muted)] mb-4">Adding <strong className="text-blue-400">{traceRoot.id}</strong> to your image introduces roughly <strong className="text-white">{impactSummary.total}</strong> packages (based on current expansion depth).</p>
+                <p className="text-xs text-[var(--text-muted)] mb-4">Adding <strong className="text-[var(--text-code-blue)]">{traceRoot.id}</strong> to your image introduces roughly <strong className="text-[var(--text-primary)]">{impactSummary.total}</strong> packages (based on current expansion depth).</p>
                 
                 <div className="space-y-2 mb-6">
                   {impactSummary.byLayer.map(([layer, count]) => (
@@ -516,7 +516,7 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
                 <div className="h-48 overflow-y-auto bg-[var(--bg-panel)] border border-[var(--border)] rounded p-2">
                   <div className="flex flex-col gap-1">
                     {impactSummary.list.map(pkg => (
-                      <span key={pkg} className="text-xs font-mono text-[var(--text-muted)] hover:text-white cursor-default">
+                      <span key={pkg} className="text-xs font-mono text-[var(--text-muted)] hover:text-[var(--text-primary)] cursor-default">
                         {pkg}
                       </span>
                     ))}
@@ -527,7 +527,7 @@ export const PackageTracer: React.FC<PackageTracerProps> = ({ config, rootHandle
           </div>
 
           {/* Right panel: Tree */}
-          <div className="flex-1 relative bg-[#010409]" ref={containerRef}>
+          <div className="flex-1 relative bg-[var(--bg-secondary)]" ref={containerRef}>
             <svg ref={svgRef} className="w-full h-full cursor-move" />
           </div>
         </div>
