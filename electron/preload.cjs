@@ -4,17 +4,38 @@ contextBridge.exposeInMainWorld('electronAPI', {
   isElectron: true,
   platform: process.platform,
 
-  // Native folder picker
+  // Native folder dialog & project scanning
   openDirectoryDialog: () => ipcRenderer.invoke('dialog:openDirectory'),
+  scanYoctoProject: (rootPath) => ipcRenderer.invoke('yocto:scanProject', rootPath),
 
-  // Native File System Operations
+  // File System & Dialog Operations
+  showSaveDialog: (options) => ipcRenderer.invoke('dialog:showSaveDialog', options),
+  writeFile: (filePath, content) => ipcRenderer.invoke('fs:writeFile', filePath, content),
   readFile: (filePath) => ipcRenderer.invoke('fs:readFile', filePath),
-  readDir: (dirPath) => ipcRenderer.invoke('fs:readDir', dirPath),
+  showItemInFolder: (fullPath) => ipcRenderer.invoke('shell:showItemInFolder', fullPath),
 
-  // Menu Event Listeners
+  // Event Listeners from Main Process
   onMenuOpenDirectory: (callback) => {
-    const handler = (event, dirPath) => callback(dirPath);
+    const handler = (_event, dirPath) => callback(dirPath);
     ipcRenderer.on('menu:open-directory', handler);
     return () => ipcRenderer.removeListener('menu:open-directory', handler);
+  },
+
+  onCliOpenDirectory: (callback) => {
+    const handler = (_event, dirPath) => callback(dirPath);
+    ipcRenderer.on('cli:open-directory', handler);
+    return () => ipcRenderer.removeListener('cli:open-directory', handler);
+  },
+
+  onMenuLoadDemo: (callback) => {
+    const handler = () => callback();
+    ipcRenderer.on('menu:load-demo', handler);
+    return () => ipcRenderer.removeListener('menu:load-demo', handler);
+  },
+
+  onScanProgress: (callback) => {
+    const handler = (_event, status) => callback(status);
+    ipcRenderer.on('scan:progress', handler);
+    return () => ipcRenderer.removeListener('scan:progress', handler);
   }
 });

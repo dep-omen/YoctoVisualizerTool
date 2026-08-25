@@ -55,14 +55,88 @@ export default function App() {
   const conflictCount = conflictResult ? conflictResult.stats.totalConflicts : 0;
   const criticalCount = conflictResult ? conflictResult.stats.criticalConflicts : 0;
 
-  // File System Access API: Pick Yocto Project Folder
+  // Scan Yocto project using Electron native IPC
+  const scanElectronProject = async (dirPath: string) => {
+    if (!window.electronAPI) return;
+    setErrorMessage(null);
+    setIsScanning(true);
+    setScanStatus({
+      phase: 'finding_conf',
+      message: `Analyzing Yocto project at ${dirPath}...`
+    });
+
+    try {
+      const parsedConfig = await window.electronAPI.scanYoctoProject(dirPath);
+      setConfig(parsedConfig);
+      setRootHandle(null);
+      setIsScanning(false);
+      setScanStatus(null);
+      setSelectedLayer(null);
+      setErrorMessage(null);
+    } catch (err: any) {
+      setIsScanning(false);
+      setScanStatus(null);
+      console.error('Electron folder scan error:', err);
+      setErrorMessage(
+        err.message ||
+        "Couldn't find build/conf/bblayers.conf — make sure you selected the root of your Yocto project (containing the 'build' or 'conf' directory)."
+      );
+    }
+  };
+
+  // Wire up Electron Menu and IPC events
+  useEffect(() => {
+    if (!window.electronAPI) return;
+
+    const removeProgress = window.electronAPI.onScanProgress?.((status) => {
+      setScanStatus(status);
+    });
+
+    const removeMenuOpen = window.electronAPI.onMenuOpenDirectory?.(async (dirPath) => {
+      if (dirPath) {
+        await scanElectronProject(dirPath);
+      }
+    });
+
+    const removeCliOpen = window.electronAPI.onCliOpenDirectory?.(async (dirPath) => {
+      if (dirPath) {
+        await scanElectronProject(dirPath);
+      }
+    });
+
+    const removeLoadDemo = window.electronAPI.onMenuLoadDemo?.(() => {
+      handleLoadDemo();
+    });
+
+    return () => {
+      removeProgress?.();
+      removeMenuOpen?.();
+      removeCliOpen?.();
+      removeLoadDemo?.();
+    };
+  }, []);
+
+  // Pick Yocto Project Folder (Electron Native or Web API)
   const handleOpenFolder = async () => {
     setErrorMessage(null);
 
-    // Check File System Access API availability
+    // 1. Electron Native folder dialog
+    if (window.electronAPI) {
+      try {
+        const selectedDir = await window.electronAPI.openDirectoryDialog();
+        if (selectedDir) {
+          await scanElectronProject(selectedDir);
+        }
+      } catch (err: any) {
+        setErrorMessage(err.message || 'Failed to open directory');
+      }
+      return;
+    }
+
+    // 2. Web Browser: File System Access API
     if (!('showDirectoryPicker' in window)) {
       setErrorMessage(
-        'The File System Access API is not supported in this browser. Please use Google Chrome or Microsoft Edge (desktop) for direct folder access.'
+        'The File System Access API is not supported in this browser. Please use Google Chrome, Microsoft Edge, or launch this app in the Electron desktop wrapper.'
       );
       return;
     }
@@ -105,7 +179,7 @@ export default function App() {
       // Check for common iframe restriction or missing bblayers
       if (err.name === 'SecurityError' || err.message?.includes('Cross-origin') || err.message?.includes('iframe')) {
         setErrorMessage(
-          'Security constraint: File System Picker is restricted inside embedded previews. Click the button below to load the STM32MP1 / OpenSTLinux sample demo workspace, or open this application in a dedicated browser tab to select local folders.'
+          'Security constraint: File System Picker is restricted inside embedded previews. Click the button below to load the STM32MP1 / OpenSTLinux sample demo workspace, or open this application in a dedicated browser tab or run in Electron.'
         );
       } else {
         setErrorMessage(
@@ -132,14 +206,40 @@ export default function App() {
     const pngDataUrl = await graphRef.current.exportPng();
     if (!pngDataUrl) return;
 
+    if (window.electronAPI?.showSaveDialog && window.electronAPI?.writeFile) {
+      const savePath = await window.electronAPI.showSaveDialog({
+        title: 'Save Layer Graph PNG',
+        defaultPath: `yocto-layer-graph-${config?.folderName || 'project'}.png`,
+        filters: [{ name: 'PNG Image', extensions: ['png'] }]
+      });
+      if (savePath) {
+        const base64Data = pngDataUrl.replace(/^data:image\/png;base64,/, '');
+        await window.electronAPI.writeFile(savePath, base64Data);
+      }
+      return;
+    }
+
     const link = document.createElement('a');
     link.download = `yocto-layer-graph-${config?.folderName || 'project'}.png`;
     link.href = pngDataUrl;
     link.click();
   };
 
-  const handleDownloadStandaloneHtml = () => {
+  const handleDownloadStandaloneHtml = async () => {
     const htmlContent = generateStandaloneHtml();
+
+    if (window.electronAPI?.showSaveDialog && window.electronAPI?.writeFile) {
+      const savePath = await window.electronAPI.showSaveDialog({
+        title: 'Save Standalone Yocto Visualizer HTML',
+        defaultPath: 'yocto-layer-visualizer.html',
+        filters: [{ name: 'HTML Document', extensions: ['html'] }]
+      });
+      if (savePath) {
+        await window.electronAPI.writeFile(savePath, htmlContent);
+      }
+      return;
+    }
+
     const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');

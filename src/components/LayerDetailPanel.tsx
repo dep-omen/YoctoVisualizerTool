@@ -9,7 +9,8 @@ import {
   FilePlus,
   Code2,
   Layers,
-  Sparkles
+  Sparkles,
+  FolderOpen
 } from 'lucide-react';
 
 interface LayerDetailPanelProps {
@@ -109,13 +110,28 @@ export const LayerDetailPanel: React.FC<LayerDetailPanelProps> = ({
             <span className="truncate" title={layer.path}>
               {layer.path}
             </span>
-            <button
-              onClick={handleCopyPath}
-              className="p-1 rounded hover:bg-gray-800 text-[var(--text-muted)] hover:text-[var(--text-primary)] ml-1 shrink-0"
-              title="Copy path"
-            >
-              {copiedPath ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
-            </button>
+            <div className="flex items-center gap-0.5 shrink-0 ml-1">
+              {window.electronAPI && (
+                <button
+                  onClick={() => {
+                    if (layer.absolutePath || layer.path) {
+                      window.electronAPI?.showItemInFolder(layer.absolutePath || layer.path);
+                    }
+                  }}
+                  className="p-1 rounded hover:bg-gray-800 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
+                  title="Reveal in File Manager"
+                >
+                  <FolderOpen className="w-3 h-3" />
+                </button>
+              )}
+              <button
+                onClick={handleCopyPath}
+                className="p-1 rounded hover:bg-gray-800 text-[var(--text-muted)] hover:text-[var(--text-primary)] transition"
+                title="Copy path"
+              >
+                {copiedPath ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
+              </button>
+            </div>
           </div>
         </div>
 
