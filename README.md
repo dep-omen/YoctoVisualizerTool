@@ -1,106 +1,179 @@
-# Yocto Layer Visualizer
+# YoctoVisualizer
 
-An interactive developer tool and visualizer for Yocto Project and OpenEmbedded build environments. Inspect layer dependency topologies, detect recipe version bumps & forks, identify orphaned `.bbappend` files, simulate package dependencies, and analyze build estimates.
+A browser-based interactive visualizer for Yocto Project build stacks.
+Drop your Yocto workspace folder and instantly see your layer dependency
+graph, recipe conflicts, package chains, bbappend overrides, and build
+time estimates — all parsed from your real config files with zero setup.
 
-Runs directly in modern browsers via the **File System Access API** and as a native desktop application using **Electron**.
-
----
-
-## ✨ Features
-
-- **Interactive Layer Dependency Graph**:
-  - D3.js force-directed topology map rendering layer priorities, dynamic links, and dependencies (`LAYERDEPENDS`, `LAYERRECOMMENDS`).
-  - Interactive search, focus highlighting, category coloring (Core, OpenEmbedded, BSP, Custom), and dependency depth inspection.
-- **Recipe & bbappend Conflict Detection**:
-  - Automatically identifies overlapping recipes across layers.
-  - Highlights version bumps, forks, priority overrides, and shadowed recipes.
-  - Detects orphaned `.bbappend` files (appends targeting recipes not present in the active layer stack).
-- **Deep `.bbappend` Stack Inspector**:
-  - Step-by-step layer append order preview showing exact file paths and line-by-line BitBake syntax highlighting.
-- **Package Dependency Tracer (`RDEPENDS` / `DEPENDS`)**:
-  - Interactive dependency tree visualization for build-time (`DEPENDS`) and runtime (`RDEPENDS`) packages.
-- **Build Time & Resource Estimator**:
-  - Estimates build duration, disk usage, package counts, and recommended `BB_NUMBER_THREADS` / `PARALLEL_MAKE` settings based on active layers and target architectures.
-- **Privacy & Security**:
-  - 100% client-side parsing. Your source code, layers, and configuration files never leave your workstation.
+![Layer Graph](screenshots/layer-graph-dark.png)
 
 ---
 
-## 🚀 Quick Start
+## Why this exists
 
-### Prerequisites
-- Node.js (v18 or higher recommended)
-- npm or yarn
+Yocto is the standard for embedded Linux. It powers automotive ECUs,
+medical devices, industrial controllers, and consumer electronics at
+scale. But the entire build stack is defined in text files scattered
+across dozens of directories. The relationships between layers, which
+recipes conflict, what a package pulls into your rootfs — none of this
+is visible anywhere without running a full build first.
 
-### Installation
+YoctoVisualizer makes it visible. Open your workspace folder and see
+your entire build stack as an interactive graph in seconds.
+
+---
+
+## Features
+
+**Layer Graph**
+- D3 force-directed and hierarchical tree layouts
+- Parses real `bblayers.conf` with full BitBake variable expansion
+  (`${OEROOT}`, `+=`, `=+`, compound operators)
+- Handles ST-generated configs, vanilla Poky, and everything in between
+- Ghost nodes for missing and unmet dependencies
+- Auto-discovers layers without `bblayers.conf` by scanning for
+  `layer.conf` files
+- Supports `BBFILE_COLLECTIONS` with `_COLLECTIONNAME` suffix convention
+- Dynamic extension edges from `BBFILES_DYNAMIC`
+
+**Conflict Detector**
+- Finds every `BBFILE_PRIORITY` clash across active layers
+- Categorizes conflicts: CRITICAL (equal priority), VERSION BUMP, FORK
+- Detects orphan bbappends targeting recipes not in active layers
+- Expandable rows showing full file paths and which layer wins
+
+**Package Tracer**
+- Type any recipe name — traces full `DEPENDS` and `RDEPENDS` chains
+- D3 collapsible tree with compile-time vs runtime edge distinction
+- Rootfs impact summary — every package that lands in the image
+- Recipe index built from real `.bb` files across all active layers
+
+**BBAppend Viewer**
+- Lists all `.bbappend` files grouped by layer
+- Side-by-side view of original recipe and bbappend contents
+- Syntax highlighted BitBake — variable assignments, functions, comments
+- Auto-categorizes changes: SRC_URI additions, DEPENDS changes,
+  function overrides, PACKAGECONFIG modifications
+- Flags orphan bbappends and recipes patched by multiple layers
+
+**Build Estimator**
+- Estimates cold and warm build times from real recipe count and
+  category breakdown
+- Phase breakdown: fetch, parse, compile, image creation
+- Layer contribution chart
+- Generates optimized `local.conf` snippet for your machine profile
+- Actionable recommendations based on your hardware and layer stack
+
+---
+
+## Tested with
+
+| Stack | Recipes | BBAppends |
+|---|---|---|
+| OpenSTLinux scarthgap `openstlinux-6.6-yocto-scarthgap-mpu-v24.11.06` | 3,059 | 76 |
+| `meta-raspberrypi` standalone | 50 | 29 |
+| vanilla `openembedded-core` | 921 | 0 |
+
+---
+
+## Getting started
+
+### Browser (Chrome or Edge only)
+
+The folder picker uses the File System Access API which is only
+available in Chromium-based browsers.
+
 ```bash
-# Clone the repository
-git clone <repository-url>
-cd yocto-layer-visualizer
-
-# Install dependencies
+git clone https://github.com/dep-omen/YoctoVisualizerTool.git
+cd YoctoVisualizerTool
 npm install
-```
-
-### Run Web Development Server
-```bash
 npm run dev
 ```
-Open your browser at `http://localhost:3000`.
 
-### Run Desktop App (Electron)
+Open `http://localhost:3000` in Chrome or Edge.
+Click **Open Folder** and select your Yocto project root.
+
+### Electron (any OS, no browser restriction)
+
 ```bash
-npm run electron:dev
+npm run electron
 ```
 
----
-
-## 🖥️ Usage
-
-1. **Open a Project**:
-   - Click **"Open Folder"** and select your Yocto project root directory (the directory containing `build/conf/bblayers.conf` or layer repositories like `poky`, `meta-openembedded`, etc.).
-   - Alternatively, click **"Explore Sample STM32MP1 Demo"** to explore a pre-loaded reference stack with sample conflicts, dependencies, and recipes.
-2. **Navigate Views**:
-   - **Layer Graph**: Explore layer hierarchy, drag nodes, inspect priorities, and see direct vs. indirect dependencies.
-   - **Recipe Conflicts**: View all duplicate recipes, version overrides, and orphan `.bbappend` files with one-click path copying.
-   - **bbappend Viewer**: View chained appends across layers with diff previews.
-   - **Package Tracer**: Inspect package runtime and build-time dependency trees.
-   - **Build Estimator**: Estimate compilation times and resource footprints.
-
----
-
-## 📦 Desktop Packaging (Electron)
-
-To package the application into standalone executables for your operating system:
+Or build a distributable:
 
 ```bash
-# Build web assets first
 npm run build
-
-# Package for Linux (AppImage and .deb)
-npx electron-builder --linux
-
-# Package for macOS (.dmg and .zip)
-npx electron-builder --mac
-
-# Package for Windows (.exe installer)
-npx electron-builder --win
+npm run electron:build
 ```
-Packaged binaries will be generated in the `release/` directory.
 
 ---
 
-## 🛠️ Technology Stack
+## What to open
 
-- **Framework**: React 19, TypeScript, Vite
-- **Styling**: Tailwind CSS
-- **Visualizations**: D3.js (`d3-force`, `d3-selection`, `d3-zoom`, `d3-hierarchy`)
-- **Icons**: Lucide React
-- **Desktop Runtime**: Electron
-- **Parser**: Custom client-side parser for BitBake configuration files (`bblayers.conf`, `layer.conf`, `.bb`, `.bbappend`)
+The tool expects your Yocto project root — the folder that contains
+your `build/` directory (or directly contains `conf/bblayers.conf`).
+
+**For OpenSTLinux:**
+```bash
+# After repo sync
+source layers/meta-st/scripts/envsetup.sh
+# Select your machine and build directory
+# Then open the workspace root in YoctoVisualizer
+```
+
+**For vanilla Poky:**
+```bash
+source poky/oe-init-build-env build
+# Then open the workspace root in YoctoVisualizer
+```
+
+**For a standalone layer clone** (no bblayers.conf):
+Just open the cloned layer folder directly. The tool auto-discovers
+all `layer.conf` files and builds the graph from what it finds.
 
 ---
 
-## 📄 License
+## Stack
 
-MIT License. See [LICENSE](LICENSE) for details.
+- React 19 + Vite + TypeScript
+- Tailwind CSS
+- D3.js v7
+- Electron (desktop wrapper)
+- File System Access API (browser mode)
+
+---
+
+## Screenshots
+
+**Dark theme — OpenSTLinux scarthgap STM32MP157**
+![Layer Graph Dark](screenshots/layer-graph-dark.png)
+
+**Light theme**
+![Layer Graph Light](screenshots/layer-graph-light.png)
+
+**Conflict Detector — 25 conflicts found in real ST stack**
+![Conflict Detector](screenshots/conflict-detector.png)
+
+**Package Tracer — gstreamer1.0-meta-base pulling 41 packages**
+![Package Tracer](screenshots/package-tracer.png)
+
+**BBAppend Viewer — ST overrides on gstreamer**
+![BBAppend Viewer](screenshots/bbappend-viewer.png)
+
+**Build Estimator — 19h 24m cold build on 28-core machine**
+![Build Estimator](screenshots/build-estimator.png)
+
+---
+
+## Contributing
+
+Issues and PRs welcome. The parsing logic lives in `src/utils/` —
+`fileSystemScanner.ts`, `yoctoParser.ts`, and `recipeParser.ts`.
+If you have a real `bblayers.conf` that breaks the parser, open an
+issue and paste the relevant section.
+
+---
+
+## License
+
+MIT
