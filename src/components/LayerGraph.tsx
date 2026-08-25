@@ -192,31 +192,43 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
     if (!s || !t || s.x == null || s.y == null || t.x == null || t.y == null) return '';
 
     if (mode === 'tree') {
-      // In Tree mode: smooth curved path (d3.linkVertical) from parent bottom to child top
-      // s is dependent layer (child), t is dependency (parent)
-      let parent = t;
-      let child = s;
-      
-      // Determine which one sits higher vertically (parent vs child)
+      let startX = s.x;
+      let startY = s.y;
+      let endX = t.x;
+      let endY = t.y;
+
       if (s.y < t.y) {
-        parent = s;
-        child = t;
+        // s is above t
+        startY += s.radius;
+        endY -= t.radius;
+      } else {
+        // s is below t
+        startY -= s.radius;
+        endY += t.radius;
       }
 
-      const pX = parent.x!;
-      const pY = parent.y! + parent.radius;
-      const cX = child.x!;
-      const cY = child.y! - child.radius;
-
-      // Link vertical smooth cubic bezier
       const linkGen = d3.linkVertical()({
-        source: [pX, pY],
-        target: [cX, cY]
+        source: [startX, startY],
+        target: [endX, endY]
       });
-      return linkGen || `M${pX},${pY} L${cX},${cY}`;
+      return linkGen || `M${startX},${startY} L${endX},${endY}`;
     } else {
-      // Straight line for force layout
-      return `M${s.x},${s.y} L${t.x},${t.y}`;
+      // Force mode: calculate edge intersection
+      const dx = t.x! - s.x!;
+      const dy = t.y! - s.y!;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distance === 0) return '';
+      
+      // Target edge
+      const tX = t.x! - (dx * t.radius / distance);
+      const tY = t.y! - (dy * t.radius / distance);
+      
+      // Source edge
+      const sX = s.x! + (dx * s.radius / distance);
+      const sY = s.y! + (dy * s.radius / distance);
+      
+      return `M${sX},${sY} L${tX},${tY}`;
     }
   };
 
@@ -236,14 +248,14 @@ export const LayerGraph = forwardRef<LayerGraphRef, LayerGraphProps>(({
     const createMarker = (id: string, color: string) => {
       defs.append('marker')
         .attr('id', id)
-        .attr('viewBox', '0 -5 10 10')
-        .attr('refX', 24)
+        .attr('viewBox', '0 -4 8 8')
+        .attr('refX', 7.5)
         .attr('refY', 0)
-        .attr('markerWidth', 6)
-        .attr('markerHeight', 6)
+        .attr('markerWidth', 5.5)
+        .attr('markerHeight', 5.5)
         .attr('orient', 'auto')
         .append('path')
-        .attr('d', 'M0,-5L10,0L0,5')
+        .attr('d', 'M0,-4 L8,0 L0,4 Z')
         .attr('fill', color);
     };
 
