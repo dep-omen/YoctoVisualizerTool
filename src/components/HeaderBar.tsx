@@ -3,7 +3,7 @@ import { YoctoBuildConfig } from '../types';
 import { Logo } from './Logo';
 import {
   FolderOpen, Calculator, Maximize2, Download, FileCode, Layers, 
-  ChevronDown, AlertTriangle, Network, Search, Sparkles, Sun, Moon
+  ChevronDown, AlertTriangle, Network, Search, Database, Sun, Moon
 } from 'lucide-react';
 
 interface HeaderBarProps {
@@ -152,7 +152,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
           className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 bg-[var(--bg-tertiary)] border border-[var(--border)] rounded-[6px] text-[12px] text-[var(--text-secondary)] hover:border-[var(--border-strong)] hover:text-[var(--text-primary)] transition"
           title="Switch to STM32MP1 sample project"
         >
-          <Sparkles className="w-3.5 h-3.5" />
+          <Database className="w-3.5 h-3.5" />
           <span>Demo Data</span>
         </button>
         

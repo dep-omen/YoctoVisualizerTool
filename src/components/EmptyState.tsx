@@ -1,5 +1,5 @@
 import React from 'react';
-import { FolderOpen, Sparkles, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { FolderOpen, Database, ShieldCheck, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 interface EmptyStateProps {
   onOpenFolder: () => void;
@@ -93,7 +93,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
               onClick={onLoadDemo}
               className="w-full sm:w-auto px-4 py-2.5 rounded-[6px] bg-[var(--bg-tertiary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-semibold text-[12px] border border-[var(--border)] hover:border-[var(--border-strong)] flex items-center justify-center gap-2 transition"
             >
-              <Sparkles className="w-3.5 h-3.5" />
+              <Database className="w-3.5 h-3.5" />
               <span>Explore Sample STM32MP1 Demo</span>
             </button>
           </div>
