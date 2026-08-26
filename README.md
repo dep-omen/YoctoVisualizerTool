@@ -84,8 +84,8 @@ The folder picker uses the File System Access API which is only
 available in Chromium-based browsers.
 
 ```bash
-git clone https://github.com/dep-omen/YoctoVisualizerTool.git
-cd YoctoVisualizerTool
+git clone https://github.com/dep-omen/YoctoVisualizer.git
+cd YoctoVisualizer
 npm install
 npm run dev
 ```

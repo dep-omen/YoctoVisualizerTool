@@ -1,6 +1,6 @@
 {
   "appId": "org.yoctoproject.layer-visualizer",
-  "productName": "Yocto Layer Visualizer",
+  "productName": "YoctoVisualizer",
   "copyright": "Copyright © 2026",
   "directories": {
     "output": "release"

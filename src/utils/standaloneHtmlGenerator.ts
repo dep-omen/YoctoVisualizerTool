@@ -14,7 +14,7 @@ export function generateStandaloneHtml(): string {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Yocto Layer Visualizer & Conflict Detector</title>
+  <title>YoctoVisualizer & Conflict Detector</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -213,7 +213,7 @@ export function generateStandaloneHtml(): string {
     <div class="header-left">
       <div class="header-logo">YO</div>
       <div>
-        <div class="header-title">Yocto Layer Visualizer</div>
+        <div class="header-title">YoctoVisualizer</div>
       </div>
       
       <!-- TAB NAVIGATION -->

@@ -1,4 +1,4 @@
-# Yocto Layer Visualizer — Desktop (Electron) Guide
+# YoctoVisualizer — Desktop (Electron) Guide
 
 This application runs as a modern web app in the browser and as a high-performance native desktop application powered by **Electron**.
 

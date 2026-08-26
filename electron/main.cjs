@@ -63,7 +63,7 @@ function startStaticDistServer(distDir) {
           res.end(`
             <!DOCTYPE html>
             <html>
-              <head><title>Yocto Layer Visualizer</title><style>body{background:${nativeTheme.shouldUseDarkColors ? '#0f172a' : '#f8fafc'};color:${nativeTheme.shouldUseDarkColors ? '#f1f5f9' : '#0f172a'};font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;}</style></head>
+              <head><title>YoctoVisualizer</title><style>body{background:${nativeTheme.shouldUseDarkColors ? '#0f172a' : '#f8fafc'};color:${nativeTheme.shouldUseDarkColors ? '#f1f5f9' : '#0f172a'};font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center;}</style></head>
               <body>
                 <div>
                   <h2>Building application assets...</h2>
@@ -138,7 +138,7 @@ async function createWindow() {
     height: 920,
     minWidth: 1024,
     minHeight: 700,
-    title: 'Yocto Layer Visualizer',
+    title: 'YoctoVisualizer',
     backgroundColor: nativeTheme.shouldUseDarkColors ? '#0f172a' : '#f8fafc',
     show: false,
     webPreferences: {

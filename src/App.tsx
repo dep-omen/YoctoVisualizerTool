@@ -229,7 +229,7 @@ export default function App() {
     if (window.electronAPI?.showSaveDialog && window.electronAPI?.writeFile) {
       const savePath = await window.electronAPI.showSaveDialog({
         title: 'Save Layer Graph PNG',
-        defaultPath: `yocto-layer-graph-${config?.folderName || 'project'}.png`,
+        defaultPath: `yocto-graph-${config?.folderName || 'project'}.png`,
         filters: [{ name: 'PNG Image', extensions: ['png'] }]
       });
       if (savePath) {
@@ -240,7 +240,7 @@ export default function App() {
     }
 
     const link = document.createElement('a');
-    link.download = `yocto-layer-graph-${config?.folderName || 'project'}.png`;
+    link.download = `yocto-graph-${config?.folderName || 'project'}.png`;
     link.href = pngDataUrl;
     link.click();
   };
@@ -251,7 +251,7 @@ export default function App() {
     if (window.electronAPI?.showSaveDialog && window.electronAPI?.writeFile) {
       const savePath = await window.electronAPI.showSaveDialog({
         title: 'Save Standalone Yocto Visualizer HTML',
-        defaultPath: 'yocto-layer-visualizer.html',
+        defaultPath: 'yocto-visualizer.html',
         filters: [{ name: 'HTML Document', extensions: ['html'] }]
       });
       if (savePath) {
@@ -263,7 +263,7 @@ export default function App() {
     const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.download = 'yocto-layer-visualizer.html';
+    link.download = 'yocto-visualizer.html';
     link.href = url;
     link.click();
     URL.revokeObjectURL(url);

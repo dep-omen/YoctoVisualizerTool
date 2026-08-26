@@ -55,7 +55,7 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
       <div className="flex items-center h-full">
         <Logo size={28} />
         <span className="ml-2 text-[14px] font-medium text-[var(--text-primary)] whitespace-nowrap">
-          Yocto Layer Visualizer
+          YoctoVisualizer
         </span>
         
         <div className="h-6 w-[1px] bg-[var(--border)] mx-4 shrink-0" />
