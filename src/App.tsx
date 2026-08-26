@@ -195,6 +195,9 @@ export default function App() {
     if (!files || files.length === 0) return;
     
     try {
+      if (files.length > 0 && files.length < 50) {
+        setErrorMessage(`Warning: The browser only loaded ${files.length} files. Embedded iframes often silently truncate large folder uploads. Please open this app in a dedicated new tab for full Yocto parsing.`);
+      }
       const virtualDirHandle = createVirtualFileSystem(files);
       await processDirectoryHandle(virtualDirHandle);
     } catch (err: any) {
