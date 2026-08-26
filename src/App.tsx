@@ -13,6 +13,7 @@ import { PackageTracer } from './components/PackageTracer';
 import { BBAppendViewer } from './components/BBAppendViewer';
 import { BuildEstimator } from './components/BuildEstimator';
 import { EmptyState } from './components/EmptyState';
+import { createVirtualFileSystem } from './utils/virtualFileSystem';
 
 export default function App() {
   const [theme, setTheme] = useState<'dark' | 'light'>(() => {
@@ -45,6 +46,7 @@ export default function App() {
   const [bbappendFilterLayer, setBbappendFilterLayer] = useState<string | null>(null);
 
   const graphRef = useRef<LayerGraphRef>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Compute conflict stats for tab badge
   const conflictResult = useMemo(() => {
@@ -134,30 +136,45 @@ export default function App() {
     }
 
     // 2. Web Browser: File System Access API
-    if (!('showDirectoryPicker' in window)) {
-      setErrorMessage(
-        'The File System Access API is not supported in this browser. Please use Google Chrome, Microsoft Edge, or launch this app in the Electron desktop wrapper.'
-      );
-      return;
+    if ('showDirectoryPicker' in window) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const dirHandle = await (window as any).showDirectoryPicker({ mode: 'read' });
+        await processDirectoryHandle(dirHandle);
+      } catch (err: any) {
+        setIsScanning(false);
+        setScanStatus(null);
+        if (err.name === 'AbortError') return;
+        console.error('Folder scan error:', err);
+        if (err.name === 'SecurityError' || err.message?.includes('Cross-origin') || err.message?.includes('iframe') || err.message?.includes('Permissions-Policy')) {
+          // Fallback for iframe restrictions
+          if (fileInputRef.current) {
+            fileInputRef.current.click();
+          }
+        } else {
+          setErrorMessage(err.message || "Couldn't find build/conf/bblayers.conf");
+        }
+      }
+    } else {
+      // Fallback for Firefox, Safari, etc.
+      if (fileInputRef.current) {
+        fileInputRef.current.click();
+      }
     }
+  };
+
+  const processDirectoryHandle = async (dirHandle: any) => {
+    setIsScanning(true);
+    setScanStatus({
+      phase: 'finding_conf',
+      message: 'Initializing parser and locating build configuration...'
+    });
+
+    const onProgress: ScanProgressCallback = (status) => {
+      setScanStatus(status);
+    };
 
     try {
-      // Prompt user to pick directory
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const dirHandle = await (window as any).showDirectoryPicker({
-        mode: 'read'
-      });
-
-      setIsScanning(true);
-      setScanStatus({
-        phase: 'finding_conf',
-        message: 'Initializing parser and locating build configuration...'
-      });
-
-      const onProgress: ScanProgressCallback = (status) => {
-        setScanStatus(status);
-      };
-
       const parsedConfig = await scanYoctoDirectory(dirHandle, onProgress);
       setConfig(parsedConfig);
       setRootHandle(dirHandle);
@@ -168,25 +185,25 @@ export default function App() {
     } catch (err: any) {
       setIsScanning(false);
       setScanStatus(null);
-
-      // User canceled the picker
-      if (err.name === 'AbortError') {
-        return;
-      }
-
       console.error('Folder scan error:', err);
+      setErrorMessage(err.message || "Couldn't find build/conf/bblayers.conf");
+    }
+  };
 
-      // Check for common iframe restriction or missing bblayers
-      if (err.name === 'SecurityError' || err.message?.includes('Cross-origin') || err.message?.includes('iframe')) {
-        setErrorMessage(
-          'Security constraint: File System Picker is restricted inside embedded previews. Click the button below to load the STM32MP1 / OpenSTLinux sample demo workspace, or open this application in a dedicated browser tab or run in Electron.'
-        );
-      } else {
-        setErrorMessage(
-          err.message ||
-          "Couldn't find build/conf/bblayers.conf — make sure you selected the root of your Yocto project (containing the 'build' or 'conf' directory)."
-        );
-      }
+  const handleFallbackFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    
+    try {
+      const virtualDirHandle = createVirtualFileSystem(files);
+      await processDirectoryHandle(virtualDirHandle);
+    } catch (err: any) {
+      console.error('Fallback scan error:', err);
+      setErrorMessage(err.message || 'Failed to parse folder contents.');
+    }
+    
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
     }
   };
 
@@ -264,7 +281,18 @@ export default function App() {
   };
 
   return (
-    <div className="flex flex-col h-screen w-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans antialiased overflow-hidden select-none">
+    <>
+      <input 
+        type="file" 
+        ref={fileInputRef}
+        onChange={handleFallbackFileChange}
+        // @ts-ignore
+        webkitdirectory="true"
+        directory="true"
+        multiple
+        className="hidden" 
+      />
+      <div className="flex flex-col h-screen w-screen bg-[var(--bg-primary)] text-[var(--text-primary)] font-sans antialiased overflow-hidden select-none">
       {/* Header Bar */}
       <HeaderBar
         theme={theme}
@@ -355,6 +383,7 @@ export default function App() {
         )}
       </main>
     </div>
+    </>
   );
 }
 
