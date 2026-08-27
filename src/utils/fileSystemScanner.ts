@@ -520,32 +520,41 @@ export async function scanYoctoDirectory(
     );
 
     for (const item of validConfs) {
-      const pathSegments = item.path.split('/');
-      const confIdx = pathSegments.lastIndexOf('conf');
-      const layerRelPath = confIdx > 0 
-        ? pathSegments.slice(0, confIdx).join('/') 
-        : (pathSegments.length > 1 ? pathSegments.slice(0, -1).join('/') : rootDirHandle.name);
-      
-      let folderName = layerRelPath.includes('/') 
-        ? layerRelPath.split('/').pop()! 
-        : (layerRelPath || rootDirHandle.name);
-      
-      if (folderName.toLowerCase() === 'conf') {
-        const parts = layerRelPath.split('/').filter(Boolean);
-        folderName = parts.length > 1 ? parts[parts.length - 2] : rootDirHandle.name;
+      // item.path looks like "meta/conf/layer.conf" or "layers/meta-oe/conf/layer.conf"
+      // Strip "/conf/layer.conf" to get the layer root relative path
+      const layerRootRelPath = item.path
+        .replace('/conf/layer.conf', '')
+        .replace('conf/layer.conf', '')
+        .trim();
+
+      const pathSegments = layerRootRelPath.split('/').filter(Boolean);
+
+      // Navigate directly from rootDirHandle through path segments
+      // This is guaranteed to work because item.path was already found via recursive search
+      let layerDirHandle: FileSystemDirectoryHandle = rootDirHandle;
+      let navSuccess = true;
+      for (const seg of pathSegments) {
+        try {
+          layerDirHandle = await (layerDirHandle as any).getDirectoryHandle(seg);
+        } catch {
+          navSuccess = false;
+          break;
+        }
       }
-        
-      let layerDirHandle = layerRelPath ? allDirMap.get(layerRelPath) : undefined;
-      if (!layerDirHandle && layerRelPath) {
-        const parentPath = layerRelPath.substring(0, layerRelPath.lastIndexOf('/'));
-        layerDirHandle = parentPath ? allDirMap.get(parentPath) : undefined;
-      }
-      if (!layerDirHandle) {
-        const extracted = item.path.split('/conf/layer.conf')[0];
-        layerDirHandle = allDirMap.get(extracted);
-      }
-      if (!layerDirHandle) {
+      if (!navSuccess) {
+        // Last resort fallback
         layerDirHandle = item.parentDir;
+      }
+
+      // Derive layerRelPath and folderName from the resolved path
+      const layerRelPath = layerRootRelPath || rootDirHandle.name;
+      let folderName = pathSegments.length > 0 
+        ? pathSegments[pathSegments.length - 1] 
+        : rootDirHandle.name;
+      if (folderName.toLowerCase() === 'conf') {
+        folderName = pathSegments.length > 1 
+          ? pathSegments[pathSegments.length - 2] 
+          : rootDirHandle.name;
       }
 
       const layerContent = await scanLayerContent(layerDirHandle, folderName, layerRelPath);
