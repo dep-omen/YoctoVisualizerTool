@@ -11,8 +11,7 @@
   ],
   "linux": {
     "target": [
-      "AppImage",
-      "deb"
+      "AppImage"
     ],
     "category": "Development",
     "synopsis": "Interactive Yocto build and layer dependency visualizer"
