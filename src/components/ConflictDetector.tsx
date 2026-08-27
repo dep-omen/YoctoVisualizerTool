@@ -324,7 +324,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                       onClick={() => toggleSort('overrides')}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span>Overridden By (Silently Ignored)</span>
+                        <span>Overridden Layers (Silently Ignored)</span>
                         <ArrowUpDown className="w-3 h-3 text-[var(--text-muted)]" />
                       </div>
                     </th>
@@ -333,7 +333,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                       onClick={() => toggleSort('type')}
                     >
                       <div className="flex items-center gap-1.5">
-                        <span>Conflict Type</span>
+                        <span>Override Type</span>
                         <ArrowUpDown className="w-3 h-3 text-[var(--text-muted)]" />
                       </div>
                     </th>
@@ -346,7 +346,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                         <div className="flex flex-col items-center justify-center gap-2">
                           <CheckCircle2 className="w-8 h-8 text-green-500" />
                           <span className="text-sm font-semibold text-[var(--text-primary)]">
-                            {searchQuery ? 'No matching recipe conflicts found for your search query.' : 'No conflicts detected in active layers.'}
+                            {searchQuery ? 'No matching recipes found for your search query.' : 'No overrides or conflicts detected in active layers.'}
                           </span>
                           <span className="text-xs text-[var(--text-muted)]">All recipe names are uniquely defined across configured layers.</span>
                         </div>
@@ -428,7 +428,7 @@ export const ConflictDetector: React.FC<ConflictDetectorProps> = ({ config }) =>
                               </div>
                             </td>
 
-                            {/* Conflict Type Badge */}
+                            {/* Override Type Badge */}
                             <td className="py-3.5 px-4">
                               {item.type === 'CRITICAL' && (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-red-950/90 border border-red-500 text-red-300 font-bold text-[10px] uppercase tracking-wider animate-pulse  -red-500/20">

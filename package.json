@@ -9,7 +9,7 @@
     "dev": "vite --port=3000 --host=0.0.0.0",
     "build": "vite build",
     "preview": "vite preview",
-    "electron": "electron .",
+    "electron": "concurrently -k \"vite --port=3000 --host=0.0.0.0\" \"wait-on tcp:3000 && electron .\"",
     "electron:dev": "concurrently -k \"vite --port=3000 --host=0.0.0.0\" \"wait-on tcp:3000 && electron .\"",
     "dev:electron": "npm run electron:dev",
     "clean": "rm -rf dist server.js",

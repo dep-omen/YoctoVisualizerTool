@@ -1,5 +1,5 @@
 import { YoctoLayer, YoctoRecipe } from '../types';
-import { extractBitbakeVar, extractBitbakeList } from './yoctoParser';
+import { extractBitbakeVar, extractBitbakeList, cleanBitbakeText } from './yoctoParser';
 
 const fileCache = new Map<string, string>();
 
@@ -9,36 +9,25 @@ export async function readYoctoFile(
   relativePath: string
 ): Promise<string> {
   if (!rootHandle || !layerAbsolutePath) return '';
-
   const fullPath = `${layerAbsolutePath}/${relativePath}`;
   if (fileCache.has(fullPath)) {
     return fileCache.get(fullPath)!;
   }
-
   try {
     // Get the root folder name to strip it from the absolute path
     const rootName = rootHandle.name;
-
     // Strip everything up to and including the root folder name
-    // e.g. /home/user/openstlinux-workspace/layers/meta-oe/...
-    // becomes layers/meta-oe/...
     const rootIndex = fullPath.indexOf('/' + rootName + '/');
     let relativeFull: string;
-
     if (rootIndex !== -1) {
-      // Strip up to and including the root folder
       relativeFull = fullPath.slice(rootIndex + rootName.length + 2);
     } else if (fullPath.startsWith(rootName + '/')) {
-      // Path already starts with root folder name
       relativeFull = fullPath.slice(rootName.length + 1);
     } else {
-      // Last resort — use the path as-is and hope it's relative
       relativeFull = fullPath.startsWith('/') ? fullPath.slice(1) : fullPath;
     }
-
     const parts = relativeFull.split('/').filter(Boolean);
     let current = rootHandle;
-
     for (let i = 0; i < parts.length - 1; i++) {
       try {
         current = await current.getDirectoryHandle(parts[i]);
@@ -47,7 +36,6 @@ export async function readYoctoFile(
         return '';
       }
     }
-
     const fileHandle = await current.getFileHandle(parts[parts.length - 1]);
     const file = await fileHandle.getFile();
     const text = await file.text();
@@ -60,7 +48,7 @@ export async function readYoctoFile(
 }
 
 export async function readRecipeContent(rootHandle: any, layer: YoctoLayer, recipe: YoctoRecipe): Promise<string> {
-  return readYoctoFile(rootHandle, layer.absolutePath, recipe.relativePath);
+  return readYoctoFile(rootHandle, layer.absolutePath || '', recipe.relativePath);
 }
 
 export function cleanDepList(list: string[], pn: string): string[] {
@@ -68,7 +56,7 @@ export function cleanDepList(list: string[], pn: string): string[] {
   for (const dep of list) {
     let clean = dep.split('(')[0].trim();
     if (clean.includes('${PN}')) clean = clean.replace(/\$\{PN\}/g, pn);
-    clean = clean.replace(/^-dev$/, '').replace(/^-staticdev$/, ''); // edge cases
+    clean = clean.replace(/^-dev$/, '').replace(/^-staticdev$/, '');
     if (clean && clean !== pn) {
       result.add(clean);
     }
@@ -77,13 +65,8 @@ export function cleanDepList(list: string[], pn: string): string[] {
 }
 
 export function parseRecipeDeps(content: string, pn: string) {
-  // Strip comments and continuation lines
-  const lines = content
-    .replace(/\\\n/g, ' ')
-    .split('\n')
-    .map(line => line.split('#')[0].trim())
-    .filter(Boolean);
-
+  const lines = cleanBitbakeText(content);
+  
   const depends = extractBitbakeList(lines, 'DEPENDS');
   
   // RDEPENDS can be RDEPENDS:${PN} or just RDEPENDS

@@ -374,6 +374,8 @@ export function extractBitbakeList(lines: string[], varName: string): string[] {
       if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) {
         val = val.slice(1, -1);
       }
+      // Remove inline bitbake version constraints before splitting (e.g. core (>= 12) -> core)
+      val = val.replace(/\([^)]*\)/g, ' ');
       // Split by whitespace and strip any enclosed quotes
       const tokens = val.split(/\s+/).map(t => t.replace(/^["']|["']$/g, '').trim()).filter(Boolean);
       results.push(...tokens);

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { YoctoBuildConfig, YoctoLayer, YoctoRecipe } from '../types';
 import { 
   Calculator, Cpu, HardDrive, Network, Layers, AlertCircle, Info, Zap, Download, Database, CheckCircle2, Copy,
@@ -26,6 +26,11 @@ export const BuildEstimator: React.FC<BuildEstimatorProps> = ({ config, conflict
   const [ram, setRam] = useState<number>(8);
   const [storage, setStorage] = useState<'HDD'|'SSD'|'NVMe'>('SSD');
   const [sstate, setSstate] = useState<'Yes'|'No'>('No');
+  useEffect(() => {
+    if (config?.variables?.SSTATE_DIR || config?.variables?.SSTATE_MIRRORS) {
+      setSstate('Yes');
+    }
+  }, [config]);
   const [network, setNetwork] = useState<'Slow'|'Normal'|'Fast'>('Normal');
   const [incremental, setIncremental] = useState<'Yes'|'No'>('No');
 
@@ -56,7 +61,7 @@ export const BuildEstimator: React.FC<BuildEstimatorProps> = ({ config, conflict
         const name = r.name.toLowerCase();
         const cat = r.relativePath.split('/')[0];
         
-        if (cat === 'recipes-kernel' || name.includes('linux-')) {
+        if (cat === 'recipes-kernel' || name.includes('linux') || name.includes('kernel')) {
           baseTime = 15;
         } else if (name.includes('gcc') || name.includes('binutils') || name.includes('toolchain')) {
           baseTime = 45;
@@ -154,7 +159,7 @@ export const BuildEstimator: React.FC<BuildEstimatorProps> = ({ config, conflict
         fix: 'Add SSTATE_MIRRORS or a local SSTATE_DIR to local.conf.'
       });
     }
-    if (est.recipeCount > 2000) {
+    if (est.recipeCount > 8000) {
       recs.push({
         type: 'warning', title: 'Large Layer Stack',
         desc: 'Your layer stack is large. Consider using a minimal image target first (core-image-minimal) to validate the build before attempting a full image.',
@@ -178,8 +183,8 @@ export const BuildEstimator: React.FC<BuildEstimatorProps> = ({ config, conflict
     
     recs.push({
       type: 'info', title: 'Optimal Threading',
-      desc: 'Set BB_NUMBER_THREADS and PARALLEL_MAKE in local.conf to match your CPU core count.',
-      fix: `BB_NUMBER_THREADS = "${cores}"\nPARALLEL_MAKE = "-j ${cores}"`
+      desc: 'Set BB_NUMBER_THREADS and PARALLEL_MAKE based on available RAM (at least 2GB per thread recommended to prevent OOM).',
+      fix: `BB_NUMBER_THREADS = "${Math.min(cores, Math.max(1, Math.floor(ram / 2)))}"\nPARALLEL_MAKE = "-j ${Math.min(cores, Math.max(1, Math.floor(ram / 2)))}"`
     });
     
     if (network === 'Slow') {
@@ -220,8 +225,8 @@ export const BuildEstimator: React.FC<BuildEstimatorProps> = ({ config, conflict
 
   const handleCopyConfig = () => {
     navigator.clipboard.writeText(`# Build performance settings
-BB_NUMBER_THREADS = "${cores}"
-PARALLEL_MAKE = "-j ${cores}"
+BB_NUMBER_THREADS = "${Math.min(cores, Math.max(1, Math.floor(ram / 2)))}"
+PARALLEL_MAKE = "-j ${Math.min(cores, Math.max(1, Math.floor(ram / 2)))}"
 SSTATE_DIR = "\${TOPDIR}/../sstate-cache"
 DL_DIR = "\${TOPDIR}/../downloads"`);
   };
@@ -472,7 +477,7 @@ DL_DIR = "\${TOPDIR}/../downloads"`);
                       </button>
                     </div>
                     <pre className="text-[10px] font-mono bg-[var(--bg-secondary)] border border-[var(--border)] p-3 rounded text-[var(--text-code-blue)] overflow-x-auto whitespace-pre-wrap">
-                      {`# Build performance settings — generated\nBB_NUMBER_THREADS = "${cores}"\nPARALLEL_MAKE = "-j ${cores}"\nSSTATE_DIR = "\${TOPDIR}/../sstate-cache"\nDL_DIR = "\${TOPDIR}/../downloads"\n\n# Uncomment to enable build history\n# INHERIT += "buildhistory"\n# BUILDHISTORY_COMMIT = "1"`}
+                      {`# Build performance settings — generated\nBB_NUMBER_THREADS = "${Math.min(cores, Math.max(1, Math.floor(ram / 2)))}"\nPARALLEL_MAKE = "-j ${Math.min(cores, Math.max(1, Math.floor(ram / 2)))}"\nSSTATE_DIR = "\${TOPDIR}/../sstate-cache"\nDL_DIR = "\${TOPDIR}/../downloads"\n\n# Uncomment to enable build history\n# INHERIT += "buildhistory"\n# BUILDHISTORY_COMMIT = "1"`}
                     </pre>
                  </div>
               </div>

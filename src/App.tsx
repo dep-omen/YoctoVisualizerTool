@@ -302,7 +302,7 @@ export default function App() {
         setTheme={setTheme}
         config={config}
         activeTab={activeTab}
-        onTabChange={setActiveTab}
+        onTabChange={(t) => { setActiveTab(t); if(t === 'bbappends') setBbappendFilterLayer(null); }}
         conflictCount={conflictCount}
         criticalCount={criticalCount}
         traceCount={traceCount}
