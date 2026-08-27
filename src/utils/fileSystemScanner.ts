@@ -535,9 +535,18 @@ export async function scanYoctoDirectory(
         folderName = parts.length > 1 ? parts[parts.length - 2] : rootDirHandle.name;
       }
         
-      const layerDirHandle = (layerRelPath && allDirMap.get(layerRelPath)) 
-        ? allDirMap.get(layerRelPath)! 
-        : item.parentDir;
+      let layerDirHandle = layerRelPath ? allDirMap.get(layerRelPath) : undefined;
+      if (!layerDirHandle && layerRelPath) {
+        const parentPath = layerRelPath.substring(0, layerRelPath.lastIndexOf('/'));
+        layerDirHandle = parentPath ? allDirMap.get(parentPath) : undefined;
+      }
+      if (!layerDirHandle) {
+        const extracted = item.path.split('/conf/layer.conf')[0];
+        layerDirHandle = allDirMap.get(extracted);
+      }
+      if (!layerDirHandle) {
+        layerDirHandle = item.parentDir;
+      }
 
       const layerContent = await scanLayerContent(layerDirHandle, folderName, layerRelPath);
       let layerConfData: ReturnType<typeof parseLayerConf> = {
