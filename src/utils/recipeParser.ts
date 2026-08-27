@@ -9,33 +9,48 @@ export async function readYoctoFile(
   relativePath: string
 ): Promise<string> {
   if (!rootHandle || !layerAbsolutePath) return '';
+
   const fullPath = `${layerAbsolutePath}/${relativePath}`;
   if (fileCache.has(fullPath)) {
     return fileCache.get(fullPath)!;
   }
+
   try {
-    // Get the root folder name to strip it from the absolute path
     const rootName = rootHandle.name;
+    let relativeFull: string;
+
+    // Case 1: layerAbsolutePath is a full absolute path like /home/user/workspace/meta
     // Strip everything up to and including the root folder name
     const rootIndex = fullPath.indexOf('/' + rootName + '/');
-    let relativeFull: string;
     if (rootIndex !== -1) {
       relativeFull = fullPath.slice(rootIndex + rootName.length + 2);
-    } else if (fullPath.startsWith(rootName + '/')) {
-      relativeFull = fullPath.slice(rootName.length + 1);
-    } else {
-      relativeFull = fullPath.startsWith('/') ? fullPath.slice(1) : fullPath;
     }
+    // Case 2: layerAbsolutePath is already relative like "meta" or "layers/meta-oe"
+    // fullPath is already relative like "meta/recipes-core/busybox/busybox_1.36.1.bb"
+    else if (!fullPath.startsWith('/')) {
+      relativeFull = fullPath;
+    }
+    // Case 3: absolute path but root name not found — strip leading slash and try
+    else {
+      relativeFull = fullPath.startsWith('/') ? fullPath.slice(1) : fullPath;
+      // If it still starts with the root name, strip it
+      if (relativeFull.startsWith(rootName + '/')) {
+        relativeFull = relativeFull.slice(rootName.length + 1);
+      }
+    }
+
     const parts = relativeFull.split('/').filter(Boolean);
+    if (parts.length === 0) return '';
+
     let current = rootHandle;
     for (let i = 0; i < parts.length - 1; i++) {
       try {
         current = await current.getDirectoryHandle(parts[i]);
       } catch {
-        console.warn(`Directory not found: ${parts[i]} in path ${relativeFull}`);
         return '';
       }
     }
+
     const fileHandle = await current.getFileHandle(parts[parts.length - 1]);
     const file = await fileHandle.getFile();
     const text = await file.text();

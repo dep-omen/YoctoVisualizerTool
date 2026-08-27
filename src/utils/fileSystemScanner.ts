@@ -557,6 +557,15 @@ export async function scanYoctoDirectory(
           : rootDirHandle.name;
       }
 
+      // Skip if we couldn't determine a valid layer root path
+      // This prevents conf/layer.conf at root level from becoming a fake "layer.conf" node
+      if (pathSegments.length === 0 || 
+          folderName === 'layer.conf' || 
+          folderName === 'conf' ||
+          layerRootRelPath === '') {
+        continue;
+      }
+
       const layerContent = await scanLayerContent(layerDirHandle, folderName, layerRelPath);
       let layerConfData: ReturnType<typeof parseLayerConf> = {
         collectionName: folderName,
